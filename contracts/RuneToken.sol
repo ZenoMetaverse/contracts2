@@ -1,9 +1,20 @@
 pragma solidity 0.6.12;
 
-import "@pancakeswap/pancake-swap-lib/contracts/token/BEP20/BEP20.sol";
+import "./libs/BEP20.sol";
 
-// CakeToken with Governance.
-contract CakeToken is BEP20('PancakeSwap Token', 'Cake') {
+// RuneToken with Governance.
+contract RuneToken is BEP20('Rune.Farm', 'RUNE') {
+    uint256 private _VAULT_FEE = 0;
+    uint256 private _CHARITY_FEE = 0;
+    uint256 private _DEV_FEE = 0;
+
+    address private _VAULT_ADDRESS;
+    address private _CHARITY_ADDRESS;
+    address private _DEV_ADDRESS;
+
+    mapping (address => bool) private _isExcluded;
+    address[] private _excluded;
+
     /// @notice Creates `_amount` token to `_to`. Must only be called by the owner (MasterChef).
     function mint(address _to, uint256 _amount) public onlyOwner {
         _mint(_to, _amount);
@@ -112,9 +123,9 @@ contract CakeToken is BEP20('PancakeSwap Token', 'Cake') {
         );
 
         address signatory = ecrecover(digest, v, r, s);
-        require(signatory != address(0), "CAKE::delegateBySig: invalid signature");
-        require(nonce == nonces[signatory]++, "CAKE::delegateBySig: invalid nonce");
-        require(now <= expiry, "CAKE::delegateBySig: signature expired");
+        require(signatory != address(0), "RUNE::delegateBySig: invalid signature");
+        require(nonce == nonces[signatory]++, "RUNE::delegateBySig: invalid nonce");
+        require(now <= expiry, "RUNE::delegateBySig: signature expired");
         return _delegate(signatory, delegatee);
     }
 
@@ -144,7 +155,7 @@ contract CakeToken is BEP20('PancakeSwap Token', 'Cake') {
         view
         returns (uint256)
     {
-        require(blockNumber < block.number, "CAKE::getPriorVotes: not yet determined");
+        require(blockNumber < block.number, "RUNE::getPriorVotes: not yet determined");
 
         uint32 nCheckpoints = numCheckpoints[account];
         if (nCheckpoints == 0) {
@@ -181,7 +192,7 @@ contract CakeToken is BEP20('PancakeSwap Token', 'Cake') {
         internal
     {
         address currentDelegate = _delegates[delegator];
-        uint256 delegatorBalance = balanceOf(delegator); // balance of underlying CAKEs (not scaled);
+        uint256 delegatorBalance = balanceOf(delegator); // balance of underlying RUNEs (not scaled);
         _delegates[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
@@ -217,7 +228,7 @@ contract CakeToken is BEP20('PancakeSwap Token', 'Cake') {
     )
         internal
     {
-        uint32 blockNumber = safe32(block.number, "CAKE::_writeCheckpoint: block number exceeds 32 bits");
+        uint32 blockNumber = safe32(block.number, "RUNE::_writeCheckpoint: block number exceeds 32 bits");
 
         if (nCheckpoints > 0 && checkpoints[delegatee][nCheckpoints - 1].fromBlock == blockNumber) {
             checkpoints[delegatee][nCheckpoints - 1].votes = newVotes;
@@ -239,4 +250,97 @@ contract CakeToken is BEP20('PancakeSwap Token', 'Cake') {
         assembly { chainId := chainid() }
         return chainId;
     }
+
+    function setFeeInfo(address vaultAddress, address charityAddress, address devAddress, uint256 vaultFee, uint256 charityFee, uint256 devFee) public onlyOwner()
+    {
+        require (vaultAddress != address(0) && charityAddress != address(0) && devAddress != address(0), "RUNE::setFeeInfo: Cannot use zero address");
+        require (vaultFee <= 100 && charityFee <= 10 && devFee <= 10, "RUNE::_transfer: Fee constraints");
+
+        _VAULT_ADDRESS = vaultAddress;
+        _CHARITY_ADDRESS = charityAddress;
+        _DEV_ADDRESS = devAddress;
+
+        _VAULT_FEE = vaultFee;
+        _CHARITY_FEE = charityFee;
+        _DEV_FEE = devFee;
+    }
+
+    function addExcluded(address account) external onlyOwner() {
+        require(!_isExcluded[account], "RUNE::addExcluded: Account is already excluded");
+
+        _isExcluded[account] = true;
+        _excluded.push(account);
+    }
+
+    function removeExcluded(address account) external onlyOwner() {
+        require(_isExcluded[account], "RUNE::removeExcluded: Account isn't excluded");
+        for (uint256 i = 0; i < _excluded.length; i++) {
+            if (_excluded[i] == account) {
+                _excluded[i] = _excluded[_excluded.length - 1];
+                _isExcluded[account] = false;
+                _excluded.pop();
+                break;
+            }
+        }
+    }
+
+    function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
+        require(sender != address(0), "RUNE::_transfer: Transfer from the zero address");
+        require(recipient != address(0), "RUNE::_transfer: Transfer to the zero address");
+    
+        if (_isExcluded[sender] && !_isExcluded[recipient]) {
+            _transferFromExcluded(sender, recipient, amount);
+        } else if (!_isExcluded[sender] && _isExcluded[recipient]) {
+            _transferToExcluded(sender, recipient, amount);
+        } else if (!_isExcluded[sender] && !_isExcluded[recipient]) {
+            _transferStandard(sender, recipient, amount);
+        } else if (_isExcluded[sender] && _isExcluded[recipient]) {
+            _transferBothExcluded(sender, recipient, amount);
+        } else {
+            _transferStandard(sender, recipient, amount);
+        }
+    }
+
+    function _transferStandard(address sender, address recipient, uint256 amount) private {
+        uint256 vaultFee = amount.mul(_VAULT_FEE).div(100);
+        uint256 charityFee = amount.mul(_CHARITY_FEE).div(100);
+        uint256 devFee = amount.mul(_DEV_FEE).div(100);
+        uint256 transferAmount = amount.sub(vaultFee).sub(charityFee).sub(devFee);
+
+        _balances[sender] = _balances[sender].sub(amount);
+        _balances[recipient] = _balances[recipient].add(transferAmount);
+
+        if (vaultFee > 0)
+            _balances[_VAULT_ADDRESS] = _balances[_VAULT_ADDRESS].add(vaultFee);
+        
+        if (charityFee > 0)
+            _balances[_CHARITY_ADDRESS] = _balances[_CHARITY_ADDRESS].add(charityFee);
+        
+        if (devFee > 0)
+            _balances[_DEV_ADDRESS] = _balances[_DEV_ADDRESS].add(devFee);
+
+        emit Transfer(sender, recipient, transferAmount);
+    }
+
+    function _transferToExcluded(address sender, address recipient, uint256 amount) private {
+        _balances[sender] = _balances[sender].sub(amount);
+        _balances[recipient] = _balances[recipient].add(amount);
+
+        emit Transfer(sender, recipient, amount);
+    }
+
+    function _transferFromExcluded(address sender, address recipient, uint256 amount) private {
+        _balances[sender] = _balances[sender].sub(amount);
+        _balances[recipient] = _balances[recipient].add(amount);
+
+        emit Transfer(sender, recipient, amount);
+    }
+
+    function _transferBothExcluded(address sender, address recipient, uint256 amount) private {
+        _balances[sender] = _balances[sender].sub(amount);
+        _balances[recipient] = _balances[recipient].add(amount);
+
+        emit Transfer(sender, recipient, amount);
+    }
+
 }
