@@ -2,10 +2,10 @@
 
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "./libs/IBEP20.sol";
-import "./libs/SafeBEP20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "./lib/math/SafeMath.sol";
+import "./lib/token/BEP20/IBEP20.sol";
+import "./lib/token/BEP20/SafeBEP20.sol";
+import "./lib/access/Ownable.sol";
 
 import "./RuneToken.sol";
 

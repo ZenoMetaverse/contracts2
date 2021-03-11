@@ -1,6 +1,6 @@
 pragma solidity 0.6.12;
 
-import "./libs/BEP20.sol";
+import "./lib/token/BEP20/BEP20.sol";
 
 // RuneToken with Governance.
 contract RuneToken is BEP20('Rune', 'RUNE') {

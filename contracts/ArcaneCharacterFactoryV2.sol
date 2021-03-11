@@ -1,7 +1,3 @@
-/**
- *Submitted for verification at BscScan.com on 2021-02-04
-*/
-
 // File: @openzeppelin/contracts/GSN/Context.sol
 
 // SPDX-License-Identifier: MIT
@@ -2345,53 +2341,53 @@ pragma solidity ^0.6.0;
 contract ArcaneCharacters is ERC721, Ownable {
     using Counters for Counters.Counter;
 
-    // Map the number of tokens per bunnyId
-    mapping(uint8 => uint256) public bunnyCount;
+    // Map the number of tokens per characterId
+    mapping(uint8 => uint256) public characterCount;
 
-    // Map the number of tokens burnt per bunnyId
-    mapping(uint8 => uint256) public bunnyBurnCount;
+    // Map the number of tokens burnt per characterId
+    mapping(uint8 => uint256) public characterBurnCount;
 
     // Used for generating the tokenId of new NFT minted
     Counters.Counter private _tokenIds;
 
-    // Map the bunnyId for each tokenId
-    mapping(uint256 => uint8) private bunnyIds;
+    // Map the characterId for each tokenId
+    mapping(uint256 => uint8) private characterIds;
 
-    // Map the bunnyName for a tokenId
-    mapping(uint8 => string) private bunnyNames;
+    // Map the characterName for a tokenId
+    mapping(uint8 => string) private characterNames;
 
     constructor(string memory _baseURI) public ERC721("Pancake Characters", "PB") {
         _setBaseURI(_baseURI);
     }
 
     /**
-     * @dev Get bunnyId for a specific tokenId.
+     * @dev Get characterId for a specific tokenId.
      */
     function getCharacterId(uint256 _tokenId) external view returns (uint8) {
-        return bunnyIds[_tokenId];
+        return characterIds[_tokenId];
     }
 
     /**
-     * @dev Get the associated bunnyName for a specific bunnyId.
+     * @dev Get the associated characterName for a specific characterId.
      */
-    function getCharacterName(uint8 _bunnyId)
+    function getCharacterName(uint8 _characterId)
         external
         view
         returns (string memory)
     {
-        return bunnyNames[_bunnyId];
+        return characterNames[_characterId];
     }
 
     /**
-     * @dev Get the associated bunnyName for a unique tokenId.
+     * @dev Get the associated characterName for a unique tokenId.
      */
     function getCharacterNameOfTokenId(uint256 _tokenId)
         external
         view
         returns (string memory)
     {
-        uint8 bunnyId = bunnyIds[_tokenId];
-        return bunnyNames[bunnyId];
+        uint8 characterId = characterIds[_tokenId];
+        return characterNames[characterId];
     }
 
     /**
@@ -2400,34 +2396,34 @@ contract ArcaneCharacters is ERC721, Ownable {
     function mint(
         address _to,
         string calldata _tokenURI,
-        uint8 _bunnyId
+        uint8 _characterId
     ) external onlyOwner returns (uint256) {
         uint256 newId = _tokenIds.current();
         _tokenIds.increment();
-        bunnyIds[newId] = _bunnyId;
-        bunnyCount[_bunnyId] = bunnyCount[_bunnyId].add(1);
+        characterIds[newId] = _characterId;
+        characterCount[_characterId] = characterCount[_characterId].add(1);
         _mint(_to, newId);
         _setTokenURI(newId, _tokenURI);
         return newId;
     }
 
     /**
-     * @dev Set a unique name for each bunnyId. It is supposed to be called once.
+     * @dev Set a unique name for each characterId. It is supposed to be called once.
      */
-    function setCharacterName(uint8 _bunnyId, string calldata _name)
+    function setCharacterName(uint8 _characterId, string calldata _name)
         external
         onlyOwner
     {
-        bunnyNames[_bunnyId] = _name;
+        characterNames[_characterId] = _name;
     }
 
     /**
      * @dev Burn a NFT token. Callable by owner only.
      */
     function burn(uint256 _tokenId) external onlyOwner {
-        uint8 bunnyIdBurnt = bunnyIds[_tokenId];
-        bunnyCount[bunnyIdBurnt] = bunnyCount[bunnyIdBurnt].sub(1);
-        bunnyBurnCount[bunnyIdBurnt] = bunnyBurnCount[bunnyIdBurnt].add(1);
+        uint8 characterIdBurnt = characterIds[_tokenId];
+        characterCount[characterIdBurnt] = characterCount[characterIdBurnt].sub(1);
+        characterBurnCount[characterIdBurnt] = characterBurnCount[characterIdBurnt].add(1);
         _burn(_tokenId);
     }
 }
@@ -2465,13 +2461,13 @@ contract CharacterFactoryV2 is Ownable {
     uint8 private constant previousNumberCharacterIds = 5;
 
     // Map the token number to URI
-    mapping(uint8 => string) private bunnyIdURIs;
+    mapping(uint8 => string) private characterIdURIs;
 
     // Event to notify when NFT is successfully minted
     event CharacterMint(
         address indexed to,
         uint256 indexed tokenId,
-        uint8 indexed bunnyId
+        uint8 indexed characterId
     );
 
     /**
@@ -2496,20 +2492,20 @@ contract CharacterFactoryV2 is Ownable {
 
     /**
      * @dev Mint NFTs from the ArcaneCharacters contract.
-     * Users can specify what bunnyId they want to mint. Users can claim once.
+     * Users can specify what characterId they want to mint. Users can claim once.
      * There is a limit on how many are distributed. It requires CAKE balance to be > 0.
      */
-    function mintNFT(uint8 _bunnyId) external {
+    function mintNFT(uint8 _characterId) external {
         // Check _msgSender() has not claimed
         require(!hasClaimed[_msgSender()], "Has claimed");
         // Check block time is not too late
         require(block.number > startBlockNumber, "too early");
         // Check block time is not too late
         require(block.number < endBlockNumber, "too late");
-        // Check that the _bunnyId is within boundary:
-        require(_bunnyId >= previousNumberCharacterIds, "bunnyId too low");
-        // Check that the _bunnyId is within boundary:
-        require(_bunnyId < numberCharacterIds, "bunnyId too high");
+        // Check that the _characterId is within boundary:
+        require(_characterId >= previousNumberCharacterIds, "characterId too low");
+        // Check that the _characterId is within boundary:
+        require(_characterId < numberCharacterIds, "characterId too high");
 
         // Update that _msgSender() has claimed
         hasClaimed[_msgSender()] = true;
@@ -2521,12 +2517,12 @@ contract CharacterFactoryV2 is Ownable {
             tokenPrice
         );
 
-        string memory tokenURI = bunnyIdURIs[_bunnyId];
+        string memory tokenURI = characterIdURIs[_characterId];
 
         uint256 tokenId =
-            arcaneCharacters.mint(address(_msgSender()), tokenURI, _bunnyId);
+            arcaneCharacters.mint(address(_msgSender()), tokenURI, _characterId);
 
-        emit CharacterMint(_msgSender(), tokenId, _bunnyId);
+        emit CharacterMint(_msgSender(), tokenId, _characterId);
     }
 
     /**
@@ -2547,21 +2543,21 @@ contract CharacterFactoryV2 is Ownable {
 
     /**
      * @dev Set up json extensions for characters 5-9
-     * Assign tokenURI to look for each bunnyId in the mint function
+     * Assign tokenURI to look for each characterId in the mint function
      * Only the owner can set it.
      */
     function setCharacterJson(
-        string calldata _bunnyId5Json,
-        string calldata _bunnyId6Json,
-        string calldata _bunnyId7Json,
-        string calldata _bunnyId8Json,
-        string calldata _bunnyId9Json
+        string calldata _characterId5Json,
+        string calldata _characterId6Json,
+        string calldata _characterId7Json,
+        string calldata _characterId8Json,
+        string calldata _characterId9Json
     ) external onlyOwner {
-        bunnyIdURIs[5] = string(abi.encodePacked(ipfsHash, _bunnyId5Json));
-        bunnyIdURIs[6] = string(abi.encodePacked(ipfsHash, _bunnyId6Json));
-        bunnyIdURIs[7] = string(abi.encodePacked(ipfsHash, _bunnyId7Json));
-        bunnyIdURIs[8] = string(abi.encodePacked(ipfsHash, _bunnyId8Json));
-        bunnyIdURIs[9] = string(abi.encodePacked(ipfsHash, _bunnyId9Json));
+        characterIdURIs[5] = string(abi.encodePacked(ipfsHash, _characterId5Json));
+        characterIdURIs[6] = string(abi.encodePacked(ipfsHash, _characterId6Json));
+        characterIdURIs[7] = string(abi.encodePacked(ipfsHash, _characterId7Json));
+        characterIdURIs[8] = string(abi.encodePacked(ipfsHash, _characterId8Json));
+        characterIdURIs[9] = string(abi.encodePacked(ipfsHash, _characterId9Json));
     }
 
     /**
@@ -2569,17 +2565,17 @@ contract CharacterFactoryV2 is Ownable {
      * Only the owner can set it.
      */
     function setCharacterNames(
-        string calldata _bunnyId5,
-        string calldata _bunnyId6,
-        string calldata _bunnyId7,
-        string calldata _bunnyId8,
-        string calldata _bunnyId9
+        string calldata _characterId5,
+        string calldata _characterId6,
+        string calldata _characterId7,
+        string calldata _characterId8,
+        string calldata _characterId9
     ) external onlyOwner {
-        arcaneCharacters.setCharacterName(5, _bunnyId5);
-        arcaneCharacters.setCharacterName(6, _bunnyId6);
-        arcaneCharacters.setCharacterName(7, _bunnyId7);
-        arcaneCharacters.setCharacterName(8, _bunnyId8);
-        arcaneCharacters.setCharacterName(9, _bunnyId9);
+        arcaneCharacters.setCharacterName(5, _characterId5);
+        arcaneCharacters.setCharacterName(6, _characterId6);
+        arcaneCharacters.setCharacterName(7, _characterId7);
+        arcaneCharacters.setCharacterName(8, _characterId8);
+        arcaneCharacters.setCharacterName(9, _characterId9);
     }
 
     /**

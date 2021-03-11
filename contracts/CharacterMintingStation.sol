@@ -1,7 +1,3 @@
-/**
- *Submitted for verification at BscScan.com on 2021-02-19
-*/
-
 // File: @openzeppelin/contracts/GSN/Context.sol
 
 // SPDX-License-Identifier: MIT
@@ -2454,53 +2450,53 @@ pragma solidity ^0.6.0;
 contract ArcaneCharacters is ERC721, Ownable {
     using Counters for Counters.Counter;
 
-    // Map the number of tokens per bunnyId
-    mapping(uint8 => uint256) public bunnyCount;
+    // Map the number of tokens per characterId
+    mapping(uint8 => uint256) public characterCount;
 
-    // Map the number of tokens burnt per bunnyId
-    mapping(uint8 => uint256) public bunnyBurnCount;
+    // Map the number of tokens burnt per characterId
+    mapping(uint8 => uint256) public characterBurnCount;
 
     // Used for generating the tokenId of new NFT minted
     Counters.Counter private _tokenIds;
 
-    // Map the bunnyId for each tokenId
-    mapping(uint256 => uint8) private bunnyIds;
+    // Map the characterId for each tokenId
+    mapping(uint256 => uint8) private characterIds;
 
-    // Map the bunnyName for a tokenId
-    mapping(uint8 => string) private bunnyNames;
+    // Map the characterName for a tokenId
+    mapping(uint8 => string) private characterNames;
 
     constructor(string memory _baseURI) public ERC721("Pancake Characters", "PB") {
         _setBaseURI(_baseURI);
     }
 
     /**
-     * @dev Get bunnyId for a specific tokenId.
+     * @dev Get characterId for a specific tokenId.
      */
     function getCharacterId(uint256 _tokenId) external view returns (uint8) {
-        return bunnyIds[_tokenId];
+        return characterIds[_tokenId];
     }
 
     /**
-     * @dev Get the associated bunnyName for a specific bunnyId.
+     * @dev Get the associated characterName for a specific characterId.
      */
-    function getCharacterName(uint8 _bunnyId)
+    function getCharacterName(uint8 _characterId)
         external
         view
         returns (string memory)
     {
-        return bunnyNames[_bunnyId];
+        return characterNames[_characterId];
     }
 
     /**
-     * @dev Get the associated bunnyName for a unique tokenId.
+     * @dev Get the associated characterName for a unique tokenId.
      */
     function getCharacterNameOfTokenId(uint256 _tokenId)
         external
         view
         returns (string memory)
     {
-        uint8 bunnyId = bunnyIds[_tokenId];
-        return bunnyNames[bunnyId];
+        uint8 characterId = characterIds[_tokenId];
+        return characterNames[characterId];
     }
 
     /**
@@ -2509,34 +2505,34 @@ contract ArcaneCharacters is ERC721, Ownable {
     function mint(
         address _to,
         string calldata _tokenURI,
-        uint8 _bunnyId
+        uint8 _characterId
     ) external onlyOwner returns (uint256) {
         uint256 newId = _tokenIds.current();
         _tokenIds.increment();
-        bunnyIds[newId] = _bunnyId;
-        bunnyCount[_bunnyId] = bunnyCount[_bunnyId].add(1);
+        characterIds[newId] = _characterId;
+        characterCount[_characterId] = characterCount[_characterId].add(1);
         _mint(_to, newId);
         _setTokenURI(newId, _tokenURI);
         return newId;
     }
 
     /**
-     * @dev Set a unique name for each bunnyId. It is supposed to be called once.
+     * @dev Set a unique name for each characterId. It is supposed to be called once.
      */
-    function setCharacterName(uint8 _bunnyId, string calldata _name)
+    function setCharacterName(uint8 _characterId, string calldata _name)
         external
         onlyOwner
     {
-        bunnyNames[_bunnyId] = _name;
+        characterNames[_characterId] = _name;
     }
 
     /**
      * @dev Burn a NFT token. Callable by owner only.
      */
     function burn(uint256 _tokenId) external onlyOwner {
-        uint8 bunnyIdBurnt = bunnyIds[_tokenId];
-        bunnyCount[bunnyIdBurnt] = bunnyCount[bunnyIdBurnt].sub(1);
-        bunnyBurnCount[bunnyIdBurnt] = bunnyBurnCount[bunnyIdBurnt].add(1);
+        uint8 characterIdBurnt = characterIds[_tokenId];
+        characterCount[characterIdBurnt] = characterCount[characterIdBurnt].sub(1);
+        characterBurnCount[characterIdBurnt] = characterBurnCount[characterIdBurnt].add(1);
         _burn(_tokenId);
     }
 }
@@ -2574,16 +2570,16 @@ contract CharacterMintingStation is AccessControl {
 
     /**
      * @dev Mint NFTs from the ArcaneCharacters contract.
-     * Users can specify what bunnyId they want to mint. Users can claim once.
+     * Users can specify what characterId they want to mint. Users can claim once.
      * There is a limit on how many are distributed. It requires CAKE balance to be > 0.
      */
     function mintCollectible(
         address _tokenReceiver,
         string calldata _tokenURI,
-        uint8 _bunnyId
+        uint8 _characterId
     ) external onlyMinter returns (uint256) {
         uint256 tokenId =
-            arcaneCharacters.mint(_tokenReceiver, _tokenURI, _bunnyId);
+            arcaneCharacters.mint(_tokenReceiver, _tokenURI, _characterId);
         return tokenId;
     }
 
@@ -2591,11 +2587,11 @@ contract CharacterMintingStation is AccessControl {
      * @dev Set up names for characters.
      * Only the main admins can set it.
      */
-    function setCharacterName(uint8 _bunnyId, string calldata _bunnyName)
+    function setCharacterName(uint8 _characterId, string calldata _characterName)
         external
         onlyOwner
     {
-        arcaneCharacters.setCharacterName(_bunnyId, _bunnyName);
+        arcaneCharacters.setCharacterName(_characterId, _characterName);
     }
 
     /**
@@ -2764,15 +2760,15 @@ library SafeBEP20 {
     }
 }
 
-// File: contracts/utils/PancakeProfile.sol
+// File: contracts/utils/ArcaneProfile.sol
 
 pragma solidity ^0.6.0;
 
-/** @title PancakeProfile.
+/** @title ArcaneProfile.
 @dev It is a contract for users to bind their address 
 to a customizable profile by depositing a NFT.
 */
-contract PancakeProfile is AccessControl, ERC721Holder {
+contract ArcaneProfile is AccessControl, ERC721Holder {
     using Counters for Counters.Counter;
     using SafeBEP20 for IBEP20;
     using SafeMath for uint256;
@@ -2784,9 +2780,9 @@ contract PancakeProfile is AccessControl, ERC721Holder {
     bytes32 public constant SPECIAL_ROLE = keccak256("SPECIAL_ROLE");
 
     uint256 public numberActiveProfiles;
-    uint256 public numberCakeToReactivate;
-    uint256 public numberCakeToRegister;
-    uint256 public numberCakeToUpdate;
+    uint256 public numberRuneToReactivate;
+    uint256 public numberRuneToRegister;
+    uint256 public numberRuneToUpdate;
     uint256 public numberTeams;
 
     mapping(address => bool) public hasRegistered;
@@ -2896,14 +2892,14 @@ contract PancakeProfile is AccessControl, ERC721Holder {
 
     constructor(
         IBEP20 _cakeToken,
-        uint256 _numberCakeToReactivate,
-        uint256 _numberCakeToRegister,
-        uint256 _numberCakeToUpdate
+        uint256 _numberRuneToReactivate,
+        uint256 _numberRuneToRegister,
+        uint256 _numberRuneToUpdate
     ) public {
         cakeToken = _cakeToken;
-        numberCakeToReactivate = _numberCakeToReactivate;
-        numberCakeToRegister = _numberCakeToRegister;
-        numberCakeToUpdate = _numberCakeToUpdate;
+        numberRuneToReactivate = _numberRuneToReactivate;
+        numberRuneToRegister = _numberRuneToRegister;
+        numberRuneToUpdate = _numberRuneToUpdate;
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
@@ -2936,7 +2932,7 @@ contract PancakeProfile is AccessControl, ERC721Holder {
         cakeToken.safeTransferFrom(
             _msgSender(),
             address(this),
-            numberCakeToRegister
+            numberRuneToRegister
         );
 
         // Increment the _countUsers counter and get userId
@@ -3033,7 +3029,7 @@ contract PancakeProfile is AccessControl, ERC721Holder {
         cakeToken.safeTransferFrom(
             _msgSender(),
             address(this),
-            numberCakeToUpdate
+            numberRuneToUpdate
         );
 
         // Interface to deposit the NFT contract
@@ -3073,7 +3069,7 @@ contract PancakeProfile is AccessControl, ERC721Holder {
         cakeToken.safeTransferFrom(
             _msgSender(),
             address(this),
-            numberCakeToReactivate
+            numberRuneToReactivate
         );
 
         // Transfer NFT to contract
@@ -3322,14 +3318,14 @@ contract PancakeProfile is AccessControl, ERC721Holder {
      * @dev Update the number of CAKE to register
      * Callable only by owner admins.
      */
-    function updateNumberCake(
-        uint256 _newNumberCakeToReactivate,
-        uint256 _newNumberCakeToRegister,
-        uint256 _newNumberCakeToUpdate
+    function updateNumberRune(
+        uint256 _newNumberRuneToReactivate,
+        uint256 _newNumberRuneToRegister,
+        uint256 _newNumberRuneToUpdate
     ) external onlyOwner {
-        numberCakeToReactivate = _newNumberCakeToReactivate;
-        numberCakeToRegister = _newNumberCakeToRegister;
-        numberCakeToUpdate = _newNumberCakeToUpdate;
+        numberRuneToReactivate = _newNumberRuneToReactivate;
+        numberRuneToRegister = _newNumberRuneToRegister;
+        numberRuneToUpdate = _newNumberRuneToUpdate;
     }
 
     /**
@@ -3398,19 +3394,19 @@ contract CharacterSpecialV1 is Ownable {
     using SafeBEP20 for IBEP20;
     using SafeMath for uint256;
 
-    CharacterMintingStation public bunnyMintingStation;
-    PancakeProfile public pancakeProfile;
+    CharacterMintingStation public characterMintingStation;
+    ArcaneProfile public arcaneProfile;
 
     IBEP20 public cakeToken;
 
     uint256 public maxViewLength;
     uint256 public numberDifferentCharacters;
 
-    // Map if address for a bunnyId has already claimed a NFT
+    // Map if address for a characterId has already claimed a NFT
     mapping(address => mapping(uint8 => bool)) public hasClaimed;
 
-    // Map if bunnyId to its characteristics
-    mapping(uint8 => Characters) public bunnyCharacteristics;
+    // Map if characterId to its characteristics
+    mapping(uint8 => Characters) public characterCharacteristics;
 
     // Number of previous series (i.e. different visuals)
     uint8 private constant previousNumberCharacterIds = 10;
@@ -3423,16 +3419,16 @@ contract CharacterSpecialV1 is Ownable {
         bool isCreated;
     }
 
-    // Event to notify a new bunny is mintable
+    // Event to notify a new character is mintable
     event CharacterAdd(
-        uint8 indexed bunnyId,
+        uint8 indexed characterId,
         uint256 thresholdUser,
         uint256 costCake
     );
 
     // Event to notify one of the characters' requirements to mint differ
     event CharacterChange(
-        uint8 indexed bunnyId,
+        uint8 indexed characterId,
         uint256 thresholdUser,
         uint256 costCake,
         bool isActive
@@ -3442,18 +3438,18 @@ contract CharacterSpecialV1 is Ownable {
     event CharacterMint(
         address indexed to,
         uint256 indexed tokenId,
-        uint8 indexed bunnyId
+        uint8 indexed characterId
     );
 
     constructor(
-        CharacterMintingStation _bunnyMintingStation,
+        CharacterMintingStation _characterMintingStation,
         IBEP20 _cakeToken,
-        PancakeProfile _pancakeProfile,
+        ArcaneProfile _arcaneProfile,
         uint256 _maxViewLength
     ) public {
-        bunnyMintingStation = _bunnyMintingStation;
+        characterMintingStation = _characterMintingStation;
         cakeToken = _cakeToken;
-        pancakeProfile = _pancakeProfile;
+        arcaneProfile = _arcaneProfile;
         maxViewLength = _maxViewLength;
     }
 
@@ -3461,62 +3457,62 @@ contract CharacterSpecialV1 is Ownable {
      * @dev Mint NFTs from the CharacterMintingStation contract.
      * Users can claim once.
      */
-    function mintNFT(uint8 _bunnyId) external {
-        // Check that the _bunnyId is within boundary
-        require(_bunnyId >= previousNumberCharacterIds, "ERR_ID_LOW");
-        require(bunnyCharacteristics[_bunnyId].isActive, "ERR_ID_INVALID");
+    function mintNFT(uint8 _characterId) external {
+        // Check that the _characterId is within boundary
+        require(_characterId >= previousNumberCharacterIds, "ERR_ID_LOW");
+        require(characterCharacteristics[_characterId].isActive, "ERR_ID_INVALID");
 
         address senderAddress = _msgSender();
 
         // 1. Check _msgSender() has not claimed
-        require(!hasClaimed[senderAddress][_bunnyId], "ERR_HAS_CLAIMED");
+        require(!hasClaimed[senderAddress][_characterId], "ERR_HAS_CLAIMED");
 
         uint256 userId;
         bool isUserActive;
 
-        (userId, , , , , isUserActive) = pancakeProfile.getUserProfile(
+        (userId, , , , , isUserActive) = arcaneProfile.getUserProfile(
             senderAddress
         );
 
         require(
-            userId < bunnyCharacteristics[_bunnyId].thresholdUser,
+            userId < characterCharacteristics[_characterId].thresholdUser,
             "ERR_USER_NOT_ELIGIBLE"
         );
 
         require(isUserActive, "ERR_USER_NOT_ACTIVE");
 
-        // Check if there is any cost associated with getting the bunny
-        if (bunnyCharacteristics[_bunnyId].cakeCost > 0) {
+        // Check if there is any cost associated with getting the character
+        if (characterCharacteristics[_characterId].cakeCost > 0) {
             cakeToken.safeTransferFrom(
                 senderAddress,
                 address(this),
-                bunnyCharacteristics[_bunnyId].cakeCost
+                characterCharacteristics[_characterId].cakeCost
             );
         }
 
         // Update that _msgSender() has claimed
-        hasClaimed[senderAddress][_bunnyId] = true;
+        hasClaimed[senderAddress][_characterId] = true;
 
         uint256 tokenId =
-            bunnyMintingStation.mintCollectible(
+            characterMintingStation.mintCollectible(
                 senderAddress,
-                bunnyCharacteristics[_bunnyId].tokenURI,
-                _bunnyId
+                characterCharacteristics[_characterId].tokenURI,
+                _characterId
             );
 
-        emit CharacterMint(senderAddress, tokenId, _bunnyId);
+        emit CharacterMint(senderAddress, tokenId, _characterId);
     }
 
     function addCharacter(
-        uint8 _bunnyId,
+        uint8 _characterId,
         string calldata _tokenURI,
         uint256 _thresholdUser,
         uint256 _cakeCost
     ) external onlyOwner {
-        require(!bunnyCharacteristics[_bunnyId].isCreated, "ERR_CREATED");
-        require(_bunnyId >= previousNumberCharacterIds, "ERR_ID_LOW_2");
+        require(!characterCharacteristics[_characterId].isCreated, "ERR_CREATED");
+        require(_characterId >= previousNumberCharacterIds, "ERR_ID_LOW_2");
 
-        bunnyCharacteristics[_bunnyId] = Characters({
+        characterCharacteristics[_characterId] = Characters({
             tokenURI: _tokenURI,
             thresholdUser: _thresholdUser,
             cakeCost: _cakeCost,
@@ -3526,7 +3522,7 @@ contract CharacterSpecialV1 is Ownable {
 
         numberDifferentCharacters = numberDifferentCharacters.add(1);
 
-        emit CharacterAdd(_bunnyId, _thresholdUser, _cakeCost);
+        emit CharacterAdd(_characterId, _thresholdUser, _cakeCost);
     }
 
     /**
@@ -3538,62 +3534,62 @@ contract CharacterSpecialV1 is Ownable {
     }
 
     function updateCharacter(
-        uint8 _bunnyId,
+        uint8 _characterId,
         uint256 _thresholdUser,
         uint256 _cakeCost,
         bool _isActive
     ) external onlyOwner {
-        require(bunnyCharacteristics[_bunnyId].isCreated, "ERR_NOT_CREATED");
-        bunnyCharacteristics[_bunnyId].thresholdUser = _thresholdUser;
-        bunnyCharacteristics[_bunnyId].cakeCost = _cakeCost;
-        bunnyCharacteristics[_bunnyId].isActive = _isActive;
+        require(characterCharacteristics[_characterId].isCreated, "ERR_NOT_CREATED");
+        characterCharacteristics[_characterId].thresholdUser = _thresholdUser;
+        characterCharacteristics[_characterId].cakeCost = _cakeCost;
+        characterCharacteristics[_characterId].isActive = _isActive;
 
-        emit CharacterChange(_bunnyId, _thresholdUser, _cakeCost, _isActive);
+        emit CharacterChange(_characterId, _thresholdUser, _cakeCost, _isActive);
     }
 
     function updateMaxViewLength(uint256 _newMaxViewLength) external onlyOwner {
         maxViewLength = _newMaxViewLength;
     }
 
-    function canClaimSingle(address _userAddress, uint8 _bunnyId)
+    function canClaimSingle(address _userAddress, uint8 _characterId)
         external
         view
         returns (bool)
     {
-        if (!pancakeProfile.hasRegistered(_userAddress)) {
+        if (!arcaneProfile.hasRegistered(_userAddress)) {
             return false;
         } else {
             uint256 userId;
             bool userStatus;
 
-            (userId, , , , , userStatus) = pancakeProfile.getUserProfile(
+            (userId, , , , , userStatus) = arcaneProfile.getUserProfile(
                 _userAddress
             );
 
             if (!userStatus) {
                 return false;
             } else {
-                bool claimStatus = _canClaim(_userAddress, userId, _bunnyId);
+                bool claimStatus = _canClaim(_userAddress, userId, _characterId);
                 return claimStatus;
             }
         }
     }
 
-    function canClaimMultiple(address _userAddress, uint8[] calldata _bunnyIds)
+    function canClaimMultiple(address _userAddress, uint8[] calldata _characterIds)
         external
         view
         returns (bool[] memory)
     {
-        require(_bunnyIds.length <= maxViewLength, "ERR_LENGTH_VIEW");
+        require(_characterIds.length <= maxViewLength, "ERR_LENGTH_VIEW");
 
-        if (!pancakeProfile.hasRegistered(_userAddress)) {
+        if (!arcaneProfile.hasRegistered(_userAddress)) {
             bool[] memory responses = new bool[](0);
             return responses;
         } else {
             uint256 userId;
             bool userStatus;
 
-            (userId, , , , , userStatus) = pancakeProfile.getUserProfile(
+            (userId, , , , , userStatus) = arcaneProfile.getUserProfile(
                 _userAddress
             );
 
@@ -3601,11 +3597,11 @@ contract CharacterSpecialV1 is Ownable {
                 bool[] memory responses = new bool[](0);
                 return responses;
             } else {
-                bool[] memory responses = new bool[](_bunnyIds.length);
+                bool[] memory responses = new bool[](_characterIds.length);
 
-                for (uint256 i = 0; i < _bunnyIds.length; i++) {
+                for (uint256 i = 0; i < _characterIds.length; i++) {
                     bool claimStatus =
-                        _canClaim(_userAddress, userId, _bunnyIds[i]);
+                        _canClaim(_userAddress, userId, _characterIds[i]);
                     responses[i] = claimStatus;
                 }
                 return responses;
@@ -3620,16 +3616,16 @@ contract CharacterSpecialV1 is Ownable {
     function _canClaim(
         address _userAddress,
         uint256 userId,
-        uint8 _bunnyId
+        uint8 _characterId
     ) internal view returns (bool) {
-        uint256 bunnyThreshold = bunnyCharacteristics[_bunnyId].thresholdUser;
-        bool bunnyActive = bunnyCharacteristics[_bunnyId].isActive;
+        uint256 characterThreshold = characterCharacteristics[_characterId].thresholdUser;
+        bool characterActive = characterCharacteristics[_characterId].isActive;
 
-        if (hasClaimed[_userAddress][_bunnyId]) {
+        if (hasClaimed[_userAddress][_characterId]) {
             return false;
-        } else if (!bunnyActive) {
+        } else if (!characterActive) {
             return false;
-        } else if (userId >= bunnyThreshold) {
+        } else if (userId >= characterThreshold) {
             return false;
         } else {
             return true;

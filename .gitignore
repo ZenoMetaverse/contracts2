@@ -1,6 +1,8 @@
 /node_modules/
 /build/
 
+contracts/lib
+
 node_modules
 
 #Buidler files
