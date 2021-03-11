@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 import "./libs/BEP20.sol";
 
 // RuneToken with Governance.
-contract RuneToken is BEP20('Rune.Farm', 'RUNE') {
+contract RuneToken is BEP20('Rune', 'RUNE') {
     uint256 private _VAULT_FEE = 0;
     uint256 private _CHARITY_FEE = 0;
     uint256 private _DEV_FEE = 0;
@@ -116,7 +116,7 @@ contract RuneToken is BEP20('Rune.Farm', 'RUNE') {
 
         bytes32 digest = keccak256(
             abi.encodePacked(
-                "\x19\x01",
+                "\\x19\\x01",
                 domainSeparator,
                 structHash
             )
