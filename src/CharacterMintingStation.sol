@@ -271,7 +271,7 @@ library SafeMath {
     }
 }
 
-// File: @pancakeswap/pancake-swap-lib/contracts/token/BEP20/IBEP20.sol
+// File: @arcanefinance/swap-lib/contracts/token/BEP20/IBEP20.sol
 
 pragma solidity >=0.4.0;
 
@@ -2465,7 +2465,7 @@ contract ArcaneCharacters is ERC721, Ownable {
     // Map the characterName for a tokenId
     mapping(uint8 => string) private characterNames;
 
-    constructor(string memory _baseURI) public ERC721("Pancake Characters", "PB") {
+    constructor(string memory _baseURI) public ERC721("Arcane Characters", "PB") {
         _setBaseURI(_baseURI);
     }
 
@@ -2543,7 +2543,7 @@ pragma solidity ^0.6.0;
 
 /** @title CharacterMintingStation.
 @dev It is a contract that allow different factories to mint
-Pancake Collectibles/Characters.
+Arcane Collectibles/Characters.
 */
 
 contract CharacterMintingStation is AccessControl {
@@ -2571,7 +2571,7 @@ contract CharacterMintingStation is AccessControl {
     /**
      * @dev Mint NFTs from the ArcaneCharacters contract.
      * Users can specify what characterId they want to mint. Users can claim once.
-     * There is a limit on how many are distributed. It requires CAKE balance to be > 0.
+     * There is a limit on how many are distributed. It requires RUNE balance to be > 0.
      */
     function mintCollectible(
         address _tokenReceiver,
@@ -2773,7 +2773,7 @@ contract ArcaneProfile is AccessControl, ERC721Holder {
     using SafeBEP20 for IBEP20;
     using SafeMath for uint256;
 
-    IBEP20 public cakeToken;
+    IBEP20 public runeToken;
 
     bytes32 public constant NFT_ROLE = keccak256("NFT_ROLE");
     bytes32 public constant POINT_ROLE = keccak256("POINT_ROLE");
@@ -2891,12 +2891,12 @@ contract ArcaneProfile is AccessControl, ERC721Holder {
     }
 
     constructor(
-        IBEP20 _cakeToken,
+        IBEP20 _runeToken,
         uint256 _numberRuneToReactivate,
         uint256 _numberRuneToRegister,
         uint256 _numberRuneToUpdate
     ) public {
-        cakeToken = _cakeToken;
+        runeToken = _runeToken;
         numberRuneToReactivate = _numberRuneToReactivate;
         numberRuneToRegister = _numberRuneToRegister;
         numberRuneToUpdate = _numberRuneToUpdate;
@@ -2905,7 +2905,7 @@ contract ArcaneProfile is AccessControl, ERC721Holder {
 
     /**
      * @dev To create a user profile. It sends the NFT to the contract
-     * and sends CAKE to burn address. Requires 2 token approvals.
+     * and sends RUNE to burn address. Requires 2 token approvals.
      */
     function createProfile(
         uint256 _teamId,
@@ -2928,8 +2928,8 @@ contract ArcaneProfile is AccessControl, ERC721Holder {
         // Transfer NFT to this contract
         nftToken.safeTransferFrom(_msgSender(), address(this), _tokenId);
 
-        // Transfer CAKE tokens to this contract
-        cakeToken.safeTransferFrom(
+        // Transfer RUNE tokens to this contract
+        runeToken.safeTransferFrom(
             _msgSender(),
             address(this),
             numberRuneToRegister
@@ -3025,8 +3025,8 @@ contract ArcaneProfile is AccessControl, ERC721Holder {
         // Transfer token to new address
         nftNewToken.safeTransferFrom(_msgSender(), address(this), _tokenId);
 
-        // Transfer CAKE token to this address
-        cakeToken.safeTransferFrom(
+        // Transfer RUNE token to this address
+        runeToken.safeTransferFrom(
             _msgSender(),
             address(this),
             numberRuneToUpdate
@@ -3066,7 +3066,7 @@ contract ArcaneProfile is AccessControl, ERC721Holder {
         );
 
         // Transfer to this address
-        cakeToken.safeTransferFrom(
+        runeToken.safeTransferFrom(
             _msgSender(),
             address(this),
             numberRuneToReactivate
@@ -3269,11 +3269,11 @@ contract ArcaneProfile is AccessControl, ERC721Holder {
     }
 
     /**
-     * @dev Claim CAKE to burn later.
+     * @dev Claim RUNE to burn later.
      * Callable only by owner admins.
      */
     function claimFee(uint256 _amount) external onlyOwner {
-        cakeToken.safeTransfer(_msgSender(), _amount);
+        runeToken.safeTransfer(_msgSender(), _amount);
     }
 
     /**
@@ -3315,7 +3315,7 @@ contract ArcaneProfile is AccessControl, ERC721Holder {
     }
 
     /**
-     * @dev Update the number of CAKE to register
+     * @dev Update the number of RUNE to register
      * Callable only by owner admins.
      */
     function updateNumberRune(
@@ -3397,7 +3397,7 @@ contract CharacterSpecialV1 is Ownable {
     CharacterMintingStation public characterMintingStation;
     ArcaneProfile public arcaneProfile;
 
-    IBEP20 public cakeToken;
+    IBEP20 public runeToken;
 
     uint256 public maxViewLength;
     uint256 public numberDifferentCharacters;
@@ -3414,7 +3414,7 @@ contract CharacterSpecialV1 is Ownable {
     struct Characters {
         string tokenURI; // e.g. ipfsHash/hiccups.json
         uint256 thresholdUser; // e.g. 1900 or 100000
-        uint256 cakeCost;
+        uint256 runeCost;
         bool isActive;
         bool isCreated;
     }
@@ -3423,14 +3423,14 @@ contract CharacterSpecialV1 is Ownable {
     event CharacterAdd(
         uint8 indexed characterId,
         uint256 thresholdUser,
-        uint256 costCake
+        uint256 costRune
     );
 
     // Event to notify one of the characters' requirements to mint differ
     event CharacterChange(
         uint8 indexed characterId,
         uint256 thresholdUser,
-        uint256 costCake,
+        uint256 costRune,
         bool isActive
     );
 
@@ -3443,12 +3443,12 @@ contract CharacterSpecialV1 is Ownable {
 
     constructor(
         CharacterMintingStation _characterMintingStation,
-        IBEP20 _cakeToken,
+        IBEP20 _runeToken,
         ArcaneProfile _arcaneProfile,
         uint256 _maxViewLength
     ) public {
         characterMintingStation = _characterMintingStation;
-        cakeToken = _cakeToken;
+        runeToken = _runeToken;
         arcaneProfile = _arcaneProfile;
         maxViewLength = _maxViewLength;
     }
@@ -3482,11 +3482,11 @@ contract CharacterSpecialV1 is Ownable {
         require(isUserActive, "ERR_USER_NOT_ACTIVE");
 
         // Check if there is any cost associated with getting the character
-        if (characterCharacteristics[_characterId].cakeCost > 0) {
-            cakeToken.safeTransferFrom(
+        if (characterCharacteristics[_characterId].runeCost > 0) {
+            runeToken.safeTransferFrom(
                 senderAddress,
                 address(this),
-                characterCharacteristics[_characterId].cakeCost
+                characterCharacteristics[_characterId].runeCost
             );
         }
 
@@ -3507,7 +3507,7 @@ contract CharacterSpecialV1 is Ownable {
         uint8 _characterId,
         string calldata _tokenURI,
         uint256 _thresholdUser,
-        uint256 _cakeCost
+        uint256 _runeCost
     ) external onlyOwner {
         require(!characterCharacteristics[_characterId].isCreated, "ERR_CREATED");
         require(_characterId >= previousNumberCharacterIds, "ERR_ID_LOW_2");
@@ -3515,36 +3515,36 @@ contract CharacterSpecialV1 is Ownable {
         characterCharacteristics[_characterId] = Characters({
             tokenURI: _tokenURI,
             thresholdUser: _thresholdUser,
-            cakeCost: _cakeCost,
+            runeCost: _runeCost,
             isActive: true,
             isCreated: true
         });
 
         numberDifferentCharacters = numberDifferentCharacters.add(1);
 
-        emit CharacterAdd(_characterId, _thresholdUser, _cakeCost);
+        emit CharacterAdd(_characterId, _thresholdUser, _runeCost);
     }
 
     /**
-     * @dev It transfers the CAKE tokens back to the chef address.
+     * @dev It transfers the RUNE tokens back to the chef address.
      * Only callable by the owner.
      */
     function claimFee(uint256 _amount) external onlyOwner {
-        cakeToken.safeTransfer(_msgSender(), _amount);
+        runeToken.safeTransfer(_msgSender(), _amount);
     }
 
     function updateCharacter(
         uint8 _characterId,
         uint256 _thresholdUser,
-        uint256 _cakeCost,
+        uint256 _runeCost,
         bool _isActive
     ) external onlyOwner {
         require(characterCharacteristics[_characterId].isCreated, "ERR_NOT_CREATED");
         characterCharacteristics[_characterId].thresholdUser = _thresholdUser;
-        characterCharacteristics[_characterId].cakeCost = _cakeCost;
+        characterCharacteristics[_characterId].runeCost = _runeCost;
         characterCharacteristics[_characterId].isActive = _isActive;
 
-        emit CharacterChange(_characterId, _thresholdUser, _cakeCost, _isActive);
+        emit CharacterChange(_characterId, _thresholdUser, _runeCost, _isActive);
     }
 
     function updateMaxViewLength(uint256 _newMaxViewLength) external onlyOwner {

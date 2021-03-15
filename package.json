@@ -6,7 +6,8 @@
     "migrate": "truffle migrate --network bscTestnet --reset",
     "compile": "truffle compile --network bscTestnet",
     "test": "npx builder test",
-    "coverage": "npx builder coverage"
+    "coverage": "npx builder coverage",
+    "build": "truffle-flattener src/RuneToken.sol > contracts/RuneToken.sol && truffle-flattener src/MasterChef.sol > contracts/MasterChef.sol"
   },
   "dependencies": {
     "@arcanefinance/swap-lib": "^0.0.4",

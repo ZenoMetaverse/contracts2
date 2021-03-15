@@ -1,5 +1,5 @@
 const { expectRevert, time } = require('@openzeppelin/test-helpers');
-const CakeToken = artifacts.require('CakeToken');
+const RuneToken = artifacts.require('RuneToken');
 const MasterChef = artifacts.require('MasterChef');
 const SyrupBar = artifacts.require('SyrupBar');
 const SousChef = artifacts.require('SousChef');
@@ -162,7 +162,7 @@ contract('SousChef', ([alice, bob, carol, dev, minter]) => {
   });
 
   it('try syrup', async () => {
-    this.cake = await CakeToken.new({ from: minter });
+    this.cake = await RuneToken.new({ from: minter });
     this.syrup = await SyrupBar.new(this.cake.address, { from: minter });
     this.lp1 = await MockBEP20.new('LPToken', 'LP1', '1000000', {
       from: minter,

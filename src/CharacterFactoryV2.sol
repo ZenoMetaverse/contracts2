@@ -271,7 +271,7 @@ library SafeMath {
     }
 }
 
-// File: @pancakeswap/pancake-swap-lib/contracts/token/BEP20/IBEP20.sol
+// File: @arcanefinance/swap-lib/contracts/token/BEP20/IBEP20.sol
 
 pragma solidity >=0.4.0;
 
@@ -2342,7 +2342,7 @@ contract ArcaneCharacters is ERC721, Ownable {
     // Map the characterName for a tokenId
     mapping(uint8 => string) private characterNames;
 
-    constructor(string memory _baseURI) public ERC721("Pancake Characters", "PB") {
+    constructor(string memory _baseURI) public ERC721("Arcane Characters", "PB") {
         _setBaseURI(_baseURI);
     }
 
@@ -2423,7 +2423,7 @@ contract CharacterFactoryV2 is Ownable {
     using SafeBEP20 for IBEP20;
 
     ArcaneCharacters public arcaneCharacters;
-    IBEP20 public cakeToken;
+    IBEP20 public runeToken;
 
     // end block number to get collectibles
     uint256 public endBlockNumber;
@@ -2431,7 +2431,7 @@ contract CharacterFactoryV2 is Ownable {
     // starting block
     uint256 public startBlockNumber;
 
-    // Number of CAKEs a user needs to pay to acquire a token
+    // Number of RUNEs a user needs to pay to acquire a token
     uint256 public tokenPrice;
 
     // Map if address has already claimed a NFT
@@ -2462,14 +2462,14 @@ contract CharacterFactoryV2 is Ownable {
      */
     constructor(
         ArcaneCharacters _arcaneCharacters,
-        IBEP20 _cakeToken,
+        IBEP20 _runeToken,
         uint256 _tokenPrice,
         string memory _ipfsHash,
         uint256 _startBlockNumber,
         uint256 _endBlockNumber
     ) public {
         arcaneCharacters = _arcaneCharacters;
-        cakeToken = _cakeToken;
+        runeToken = _runeToken;
         tokenPrice = _tokenPrice;
         ipfsHash = _ipfsHash;
         startBlockNumber = _startBlockNumber;
@@ -2479,7 +2479,7 @@ contract CharacterFactoryV2 is Ownable {
     /**
      * @dev Mint NFTs from the ArcaneCharacters contract.
      * Users can specify what characterId they want to mint. Users can claim once.
-     * There is a limit on how many are distributed. It requires CAKE balance to be > 0.
+     * There is a limit on how many are distributed. It requires RUNE balance to be > 0.
      */
     function mintNFT(uint8 _characterId) external {
         // Check _msgSender() has not claimed
@@ -2496,8 +2496,8 @@ contract CharacterFactoryV2 is Ownable {
         // Update that _msgSender() has claimed
         hasClaimed[_msgSender()] = true;
 
-        // Send CAKE tokens to this contract
-        cakeToken.safeTransferFrom(
+        // Send RUNE tokens to this contract
+        runeToken.safeTransferFrom(
             address(_msgSender()),
             address(this),
             tokenPrice
@@ -2520,11 +2520,11 @@ contract CharacterFactoryV2 is Ownable {
     }
 
     /**
-     * @dev It transfers the CAKE tokens back to the chef address.
+     * @dev It transfers the RUNE tokens back to the chef address.
      * Only callable by the owner.
      */
     function claimFee(uint256 _amount) external onlyOwner {
-        cakeToken.safeTransfer(_msgSender(), _amount);
+        runeToken.safeTransfer(_msgSender(), _amount);
     }
 
     /**
@@ -2843,7 +2843,7 @@ pragma solidity ^0.6.0;
 
 /** @title CharacterMintingStation.
 @dev It is a contract that allow different factories to mint
-Pancake Collectibles/Characters.
+Arcane Collectibles/Characters.
 */
 
 contract CharacterMintingStation is AccessControl {
@@ -2913,12 +2913,12 @@ contract CharacterFactoryV3 is Ownable {
     CharacterFactoryV2 public characterFactoryV2;
     CharacterMintingStation public characterMintingStation;
 
-    IBEP20 public cakeToken;
+    IBEP20 public runeToken;
 
     // starting block
     uint256 public startBlockNumber;
 
-    // Number of CAKEs a user needs to pay to acquire a token
+    // Number of RUNEs a user needs to pay to acquire a token
     uint256 public tokenPrice;
 
     // Map if address has already claimed a NFT
@@ -2946,14 +2946,14 @@ contract CharacterFactoryV3 is Ownable {
     constructor(
         CharacterFactoryV2 _characterFactoryV2,
         CharacterMintingStation _characterMintingStation,
-        IBEP20 _cakeToken,
+        IBEP20 _runeToken,
         uint256 _tokenPrice,
         string memory _ipfsHash,
         uint256 _startBlockNumber
     ) public {
         characterFactoryV2 = _characterFactoryV2;
         characterMintingStation = _characterMintingStation;
-        cakeToken = _cakeToken;
+        runeToken = _runeToken;
         tokenPrice = _tokenPrice;
         ipfsHash = _ipfsHash;
         startBlockNumber = _startBlockNumber;
@@ -2982,8 +2982,8 @@ contract CharacterFactoryV3 is Ownable {
         // Update that _msgSender() has claimed
         hasClaimed[senderAddress] = true;
 
-        // Send CAKE tokens to this contract
-        cakeToken.safeTransferFrom(senderAddress, address(this), tokenPrice);
+        // Send RUNE tokens to this contract
+        runeToken.safeTransferFrom(senderAddress, address(this), tokenPrice);
 
         string memory tokenURI = characterIdURIs[_characterId];
 
@@ -2998,11 +2998,11 @@ contract CharacterFactoryV3 is Ownable {
     }
 
     /**
-     * @dev It transfers the CAKE tokens back to the chef address.
+     * @dev It transfers the RUNE tokens back to the chef address.
      * Only callable by the owner.
      */
     function claimFee(uint256 _amount) external onlyOwner {
-        cakeToken.safeTransfer(_msgSender(), _amount);
+        runeToken.safeTransfer(_msgSender(), _amount);
     }
 
     /**
