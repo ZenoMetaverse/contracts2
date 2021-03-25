@@ -162,26 +162,26 @@ contract('SousChef', ([alice, bob, carol, dev, minter]) => {
   });
 
   it('try syrup', async () => {
-    this.cake = await RuneToken.new({ from: minter });
-    this.syrup = await SyrupBar.new(this.cake.address, { from: minter });
+    this.rune = await RuneToken.new({ from: minter });
+    this.syrup = await SyrupBar.new(this.rune.address, { from: minter });
     this.lp1 = await MockBEP20.new('LPToken', 'LP1', '1000000', {
       from: minter,
     });
     this.chef = await MasterChef.new(
-      this.cake.address,
+      this.rune.address,
       this.syrup.address,
       dev,
       '1000',
       '300',
       { from: minter }
     );
-    await this.cake.transferOwnership(this.chef.address, { from: minter });
+    await this.rune.transferOwnership(this.chef.address, { from: minter });
     await this.syrup.transferOwnership(this.chef.address, { from: minter });
     await this.lp1.transfer(bob, '2000', { from: minter });
     await this.lp1.transfer(alice, '2000', { from: minter });
 
     await this.lp1.approve(this.chef.address, '1000', { from: alice });
-    await this.cake.approve(this.chef.address, '1000', { from: alice });
+    await this.rune.approve(this.chef.address, '1000', { from: alice });
 
     await this.chef.add('1000', this.lp1.address, true, { from: minter });
     await this.chef.deposit(1, '20', { from: alice });

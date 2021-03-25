@@ -5,8 +5,8 @@ const SyrupBar = artifacts.require('SyrupBar');
 
 contract('SyrupBar', ([alice, bob, carol, dev, minter]) => {
   beforeEach(async () => {
-    this.cake = await RuneToken.new({ from: minter });
-    this.syrup = await SyrupBar.new(this.cake.address, { from: minter });
+    this.rune = await RuneToken.new({ from: minter });
+    this.syrup = await SyrupBar.new(this.rune.address, { from: minter });
   });
 
   it('mint', async () => {
@@ -27,17 +27,17 @@ contract('SyrupBar', ([alice, bob, carol, dev, minter]) => {
 
   it('safeRuneTransfer', async () => {
     assert.equal(
-      (await this.cake.balanceOf(this.syrup.address)).toString(),
+      (await this.rune.balanceOf(this.syrup.address)).toString(),
       '0'
     );
-    await this.cake.mint(this.syrup.address, 1000, { from: minter });
+    await this.rune.mint(this.syrup.address, 1000, { from: minter });
     await this.syrup.safeRuneTransfer(bob, 200, { from: minter });
-    assert.equal((await this.cake.balanceOf(bob)).toString(), '200');
+    assert.equal((await this.rune.balanceOf(bob)).toString(), '200');
     assert.equal(
-      (await this.cake.balanceOf(this.syrup.address)).toString(),
+      (await this.rune.balanceOf(this.syrup.address)).toString(),
       '800'
     );
     await this.syrup.safeRuneTransfer(bob, 2000, { from: minter });
-    assert.equal((await this.cake.balanceOf(bob)).toString(), '1000');
+    assert.equal((await this.rune.balanceOf(bob)).toString(), '1000');
   });
 });

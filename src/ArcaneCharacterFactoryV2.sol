@@ -2432,7 +2432,7 @@ contract ArcaneCharacters is ERC721, Ownable {
 
 pragma solidity ^0.6.12;
 
-contract CharacterFactoryV2 is Ownable {
+contract ArcaneCharacterFactoryV2 is Ownable {
     using SafeMath for uint256;
     using SafeBEP20 for IBEP20;
 
@@ -2488,6 +2488,14 @@ contract CharacterFactoryV2 is Ownable {
         ipfsHash = _ipfsHash;
         startBlockNumber = _startBlockNumber;
         endBlockNumber = _endBlockNumber;
+    }
+
+    /**
+     * @dev Allow to change the IPFS hash
+     * Only the owner can set it.
+     */
+    function updateIpfsHash(string memory _ipfsHash) external onlyOwner {
+        ipfsHash = _ipfsHash
     }
 
     /**

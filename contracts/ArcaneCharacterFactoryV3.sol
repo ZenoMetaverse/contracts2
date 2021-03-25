@@ -316,6 +316,7 @@ interface IBEP20 {
     function transfer(address recipient, uint256 amount)
         external
         returns (bool);
+
     /**
      * @dev Returns the remaining number of tokens that `spender` will be
      * allowed to spend on behalf of `owner` through {transferFrom}. This is
@@ -327,6 +328,7 @@ interface IBEP20 {
         external
         view
         returns (uint256);
+
     /**
      * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
      *
@@ -342,6 +344,7 @@ interface IBEP20 {
      * Emits an {Approval} event.
      */
     function approve(address spender, uint256 amount) external returns (bool);
+
     /**
      * @dev Moves `amount` tokens from `sender` to `recipient` using the
      * allowance mechanism. `amount` is then deducted from the caller's
@@ -352,10 +355,11 @@ interface IBEP20 {
      * Emits a {Transfer} event.
      */
     function transferFrom(
-            address sender,
+        address sender,
         address recipient,
         uint256 amount
     ) external returns (bool);
+
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to
      * another (`to`).
@@ -363,23 +367,27 @@ interface IBEP20 {
      * Note that `value` may be zero.
      */
     event Transfer(address indexed from, address indexed to, uint256 value);
+
     /**
      * @dev Emitted when the allowance of a `spender` for an `owner` is set by
      * a call to {approve}. `value` is the new allowance.
      */
     event Approval(
-            address indexed owner,
+        address indexed owner,
         address indexed spender,
         uint256 value
     );
 }
+
 // File: @openzeppelin/contracts/utils/Address.sol
+
 pragma solidity >=0.6.2 <0.8.0;
+
 /**
  * @dev Collection of functions related to the address type
  */
 library Address {
-        /**
+    /**
      * @dev Returns true if `account` is a contract.
      *
      * [IMPORTANT]
@@ -397,16 +405,18 @@ library Address {
      * ====
      */
     function isContract(address account) internal view returns (bool) {
-            // This method relies on extcodesize, which returns 0 for contracts in
+        // This method relies on extcodesize, which returns 0 for contracts in
         // construction, since the code is only stored at the end of the
         // constructor execution.
+
         uint256 size;
         // solhint-disable-next-line no-inline-assembly
         assembly {
-                size := extcodesize(account)
+            size := extcodesize(account)
         }
         return size > 0;
     }
+
     /**
      * @dev Replacement for Solidity's `transfer`: sends `amount` wei to
      * `recipient`, forwarding all available gas and reverting on errors.
@@ -424,17 +434,19 @@ library Address {
      * https://solidity.readthedocs.io/en/v0.5.11/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].
      */
     function sendValue(address payable recipient, uint256 amount) internal {
-            require(
-                address(this).balance >= amount,
+        require(
+            address(this).balance >= amount,
             "Address: insufficient balance"
         );
+
         // solhint-disable-next-line avoid-low-level-calls, avoid-call-value
         (bool success, ) = recipient.call{value: amount}("");
         require(
-                success,
+            success,
             "Address: unable to send value, recipient may have reverted"
         );
     }
+
     /**
      * @dev Performs a Solidity function call using a low level `call`. A
      * plain`call` is an unsafe replacement for a function call: use this
@@ -457,8 +469,9 @@ library Address {
         internal
         returns (bytes memory)
     {
-            return functionCall(target, data, "Address: low-level call failed");
+        return functionCall(target, data, "Address: low-level call failed");
     }
+
     /**
      * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`], but with
      * `errorMessage` as a fallback revert reason when `target` reverts.
@@ -466,12 +479,13 @@ library Address {
      * _Available since v3.1._
      */
     function functionCall(
-            address target,
+        address target,
         bytes memory data,
         string memory errorMessage
     ) internal returns (bytes memory) {
-            return functionCallWithValue(target, data, 0, errorMessage);
+        return functionCallWithValue(target, data, 0, errorMessage);
     }
+
     /**
      * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
      * but also transferring `value` wei to `target`.
@@ -484,13 +498,13 @@ library Address {
      * _Available since v3.1._
      */
     function functionCallWithValue(
-            address target,
+        address target,
         bytes memory data,
         uint256 value
     ) internal returns (bytes memory) {
-            return
+        return
             functionCallWithValue(
-                    target,
+                target,
                 data,
                 value,
                 "Address: low-level call with value failed"
@@ -2414,11 +2428,11 @@ contract ArcaneCharacters is ERC721, Ownable {
     }
 }
 
-// File: contracts/CharacterFactoryV2.sol
+// File: contracts/ArcaneCharacterFactoryV2.sol
 
 pragma solidity ^0.6.12;
 
-contract CharacterFactoryV2 is Ownable {
+contract ArcaneCharacterFactoryV2 is Ownable {
     using SafeMath for uint256;
     using SafeBEP20 for IBEP20;
 
@@ -2837,16 +2851,16 @@ abstract contract AccessControl is Context {
     }
 }
 
-// File: contracts/CharacterMintingStation.sol
+// File: contracts/ArcaneCharacterMintingStation.sol
 
 pragma solidity ^0.6.0;
 
-/** @title CharacterMintingStation.
+/** @title ArcaneCharacterMintingStation.
 @dev It is a contract that allow different factories to mint
 Arcane Collectibles/Characters.
 */
 
-contract CharacterMintingStation is AccessControl {
+contract ArcaneCharacterMintingStation is AccessControl {
     ArcaneCharacters public arcaneCharacters;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -2902,16 +2916,16 @@ contract CharacterMintingStation is AccessControl {
     }
 }
 
-// File: contracts/CharacterFactoryV3.sol
+// File: contracts/ArcaneCharacterFactoryV3.sol
 
 pragma solidity ^0.6.12;
 
-contract CharacterFactoryV3 is Ownable {
+contract ArcaneCharacterFactoryV3 is Ownable {
     using SafeMath for uint256;
     using SafeBEP20 for IBEP20;
 
-    CharacterFactoryV2 public characterFactoryV2;
-    CharacterMintingStation public characterMintingStation;
+    ArcaneCharacterFactoryV2 public characterFactoryV2;
+    ArcaneCharacterMintingStation public characterMintingStation;
 
     IBEP20 public runeToken;
 
@@ -2944,8 +2958,8 @@ contract CharacterFactoryV3 is Ownable {
     );
 
     constructor(
-        CharacterFactoryV2 _characterFactoryV2,
-        CharacterMintingStation _characterMintingStation,
+        ArcaneCharacterFactoryV2 _characterFactoryV2,
+        ArcaneCharacterMintingStation _characterMintingStation,
         IBEP20 _runeToken,
         uint256 _tokenPrice,
         string memory _ipfsHash,
@@ -2960,7 +2974,7 @@ contract CharacterFactoryV3 is Ownable {
     }
 
     /**
-     * @dev Mint NFTs from the CharacterMintingStation contract.
+     * @dev Mint NFTs from the ArcaneCharacterMintingStation contract.
      * Users can specify what characterId they want to mint. Users can claim once.
      */
     function mintNFT(uint8 _characterId) external {

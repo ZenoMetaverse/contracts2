@@ -2537,16 +2537,16 @@ contract ArcaneCharacters is ERC721, Ownable {
     }
 }
 
-// File: contracts/CharacterMintingStation.sol
+// File: contracts/ArcaneCharacterMintingStation.sol
 
 pragma solidity ^0.6.0;
 
-/** @title CharacterMintingStation.
+/** @title ArcaneCharacterMintingStation.
 @dev It is a contract that allow different factories to mint
 Arcane Collectibles/Characters.
 */
 
-contract CharacterMintingStation is AccessControl {
+contract ArcaneCharacterMintingStation is AccessControl {
     ArcaneCharacters public arcaneCharacters;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -3386,15 +3386,15 @@ contract ArcaneProfile is AccessControl, ERC721Holder {
     }
 }
 
-// File: contracts/CharacterSpecialV1.sol
+// File: contracts/ArcaneCharacterSpecialV1.sol
 
 pragma solidity ^0.6.12;
 
-contract CharacterSpecialV1 is Ownable {
+contract ArcaneCharacterSpecialV1 is Ownable {
     using SafeBEP20 for IBEP20;
     using SafeMath for uint256;
 
-    CharacterMintingStation public characterMintingStation;
+    ArcaneCharacterMintingStation public characterMintingStation;
     ArcaneProfile public arcaneProfile;
 
     IBEP20 public runeToken;
@@ -3442,7 +3442,7 @@ contract CharacterSpecialV1 is Ownable {
     );
 
     constructor(
-        CharacterMintingStation _characterMintingStation,
+        ArcaneCharacterMintingStation _characterMintingStation,
         IBEP20 _runeToken,
         ArcaneProfile _arcaneProfile,
         uint256 _maxViewLength
@@ -3454,7 +3454,7 @@ contract CharacterSpecialV1 is Ownable {
     }
 
     /**
-     * @dev Mint NFTs from the CharacterMintingStation contract.
+     * @dev Mint NFTs from the ArcaneCharacterMintingStation contract.
      * Users can claim once.
      */
     function mintNFT(uint8 _characterId) external {

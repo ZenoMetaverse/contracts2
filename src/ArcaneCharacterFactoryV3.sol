@@ -2432,7 +2432,7 @@ contract ArcaneCharacters is ERC721, Ownable {
 
 pragma solidity ^0.6.12;
 
-contract CharacterFactoryV2 is Ownable {
+contract ArcaneCharacterFactoryV2 is Ownable {
     using SafeMath for uint256;
     using SafeBEP20 for IBEP20;
 
@@ -2851,16 +2851,16 @@ abstract contract AccessControl is Context {
     }
 }
 
-// File: contracts/CharacterMintingStation.sol
+// File: contracts/ArcaneCharacterMintingStation.sol
 
 pragma solidity ^0.6.0;
 
-/** @title CharacterMintingStation.
+/** @title ArcaneCharacterMintingStation.
 @dev It is a contract that allow different factories to mint
 Arcane Collectibles/Characters.
 */
 
-contract CharacterMintingStation is AccessControl {
+contract ArcaneCharacterMintingStation is AccessControl {
     ArcaneCharacters public arcaneCharacters;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -2916,16 +2916,16 @@ contract CharacterMintingStation is AccessControl {
     }
 }
 
-// File: contracts/CharacterFactoryV3.sol
+// File: contracts/ArcaneCharacterFactoryV3.sol
 
 pragma solidity ^0.6.12;
 
-contract CharacterFactoryV3 is Ownable {
+contract ArcaneCharacterFactoryV3 is Ownable {
     using SafeMath for uint256;
     using SafeBEP20 for IBEP20;
 
-    CharacterFactoryV2 public characterFactoryV2;
-    CharacterMintingStation public characterMintingStation;
+    ArcaneCharacterFactoryV2 public characterFactoryV2;
+    ArcaneCharacterMintingStation public characterMintingStation;
 
     IBEP20 public runeToken;
 
@@ -2958,7 +2958,7 @@ contract CharacterFactoryV3 is Ownable {
     );
 
     constructor(
-        CharacterFactoryV2 _characterFactoryV2,
+        ArcaneCharacterFactoryV2 _characterFactoryV2,
         CharacterMintingStation _characterMintingStation,
         IBEP20 _runeToken,
         uint256 _tokenPrice,
@@ -2971,6 +2971,14 @@ contract CharacterFactoryV3 is Ownable {
         tokenPrice = _tokenPrice;
         ipfsHash = _ipfsHash;
         startBlockNumber = _startBlockNumber;
+    }
+
+    /**
+     * @dev Allow to change the IPFS hash
+     * Only the owner can set it.
+     */
+    function updateIpfsHash(string memory _ipfsHash) external onlyOwner {
+        ipfsHash = _ipfsHash
     }
 
     /**
