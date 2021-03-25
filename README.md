@@ -1,8 +1,5 @@
 # Rune Farm
 
-[![Actions Status](https://github.com/arcanedefi/arcane-farm/workflows/CI/badge.svg)](https://github.com/arcanedefi/arcane-farm/actions)
-[![codecov](https://codecov.io/gh/arcanefinance/arcane-farm/branch/master/graph/badge.svg?token=5XMLP74IR0)](https://codecov.io/gh/arcanefinance/arcane-farm)
-
 Feel free to read the code. More details coming soon.
 
 ## Deployed Contracts / Hash
