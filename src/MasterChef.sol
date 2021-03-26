@@ -272,16 +272,16 @@ contract MasterChef is Ownable {
     function rune_proxy_setFeeInfo(address _vaultAddress, address _charityAddress, address _devAddress, uint256 _vaultFee, uint256 _charityFee, uint256 _devFee) external
     {
         require(msg.sender == devAddress, "dev: wut?");
-        rune.setFeeInfo(_vaultAddress, _charityAddress, _devAddress, _vaultFee, _charityFee, _devFee)
+        rune.setFeeInfo(_vaultAddress, _charityAddress, _devAddress, _vaultFee, _charityFee, _devFee);
     }
 
     function rune_proxy_addExcluded(address _account) external {
         require(msg.sender == devAddress, "dev: wut?");
-        rune.addExcluded(_account)
+        rune.addExcluded(_account);
     }
 
     function rune_proxy_removeExcluded(address _account) external {
         require(msg.sender == devAddress, "dev: wut?");
-        rune.removeExcluded(_account)
+        rune.removeExcluded(_account);
     }
 }

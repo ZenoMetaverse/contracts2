@@ -2,6 +2,7 @@
   "name": "ArcaneFinance",
   "version": "1.0.0",
   "main": "index.js",
+  "engine": "10",
   "scripts": {
     "migrate": "truffle migrate --network bscTestnet --reset",
     "compile": "yarn flatten && truffle compile --network bscTestnet",

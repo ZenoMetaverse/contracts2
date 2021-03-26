@@ -1370,14 +1370,26 @@ contract MasterChef is Ownable {
 
     // The RUNE TOKEN!
     RuneToken public rune;
-    // Dev address.
-    address public devaddr;
+    // Dev address
+    address public devAddress;
+    // Charity address
+    address public charityAddress;
     // RUNE tokens created per block.
     uint256 public runePerBlock;
     // Bonus muliplier for early rune makers.
     uint256 public constant BONUS_MULTIPLIER = 1;
-    // Deposit Fee address
-    address public feeAddress;
+    // Vault address
+    address public vaultAddress;
+
+    // Mint percent breakdown
+    uint256 private devMintPercent = 0;
+    uint256 private vaultMintPercent = 0;
+    uint256 private charityMintPercent = 0;
+
+    // Deposit fee breakdown
+    uint256 private devDepositPercent = 0;
+    uint256 private vaultDepositPercent = 0;
+    uint256 private charityDepositPercent = 0;
 
     // Info of each pool.
     PoolInfo[] public poolInfo;
@@ -1394,14 +1406,16 @@ contract MasterChef is Ownable {
 
     constructor(
         RuneToken _rune,
-        address _devaddr,
-        address _feeAddress,
+        address _devAddress,
+        address _vaultAddress,
+        address _charityAddress,
         uint256 _runePerBlock,
         uint256 _startBlock
     ) public {
         rune = _rune;
-        devaddr = _devaddr;
-        feeAddress = _feeAddress;
+        devAddress = _devAddress;
+        vaultAddress = _vaultAddress;
+        charityAddress = _charityAddress;
         runePerBlock = _runePerBlock;
         startBlock = _startBlock;
     }
@@ -1479,7 +1493,9 @@ contract MasterChef is Ownable {
         }
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
         uint256 runeReward = multiplier.mul(runePerBlock).mul(pool.allocPoint).div(totalAllocPoint);
-        rune.mint(devaddr, runeReward.div(10));
+        rune.mint(devAddress, runeReward.div(10000).mul(devMintPercent));
+        rune.mint(vaultAddress, runeReward.div(10));
+        rune.mint(charityAddress, runeReward.div(10));
         rune.mint(address(this), runeReward);
         pool.accRunePerShare = pool.accRunePerShare.add(runeReward.mul(1e12).div(lpSupply));
         pool.lastRewardBlock = block.number;
@@ -1500,7 +1516,9 @@ contract MasterChef is Ownable {
             pool.lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
             if(pool.depositFeeBP > 0){
                 uint256 depositFee = _amount.mul(pool.depositFeeBP).div(10000);
-                pool.lpToken.safeTransfer(feeAddress, depositFee);
+                pool.lpToken.safeTransfer(vaultAddress, depositFee.div(10000).mul(vaultDepositPercent));
+                pool.lpToken.safeTransfer(devAddress, depositFee.div(10000).mul(devDepositPercent));
+                pool.lpToken.safeTransfer(charityAddress, depositFee.div(10000).mul(charityDepositPercent));
                 user.amount = user.amount.add(_amount).sub(depositFee);
             }else{
                 user.amount = user.amount.add(_amount);
@@ -1549,20 +1567,45 @@ contract MasterChef is Ownable {
         }
     }
 
-    // Update dev address by the previous dev.
-    function dev(address _devaddr) public {
-        require(msg.sender == devaddr, "dev: wut?");
-        devaddr = _devaddr;
-    }
-
-    function setFeeAddress(address _feeAddress) public{
-        require(msg.sender == feeAddress, "setFeeAddress: FORBIDDEN");
-        feeAddress = _feeAddress;
-    }
-
     //Arcane has to add hidden dummy pools inorder to alter the emission, here we make it simple and transparent to all.
     function updateEmissionRate(uint256 _runePerBlock) public onlyOwner {
         massUpdatePools();
         runePerBlock = _runePerBlock;
+    }
+
+    function setInfo(address _vaultAddress, address _charityAddress, address _devAddress, uint256 _vaultMintPercent, uint256 _charityMintPercent, uint256 _devMintPercent, uint256 _vaultDepositPercent, uint256 _charityDepositPercent, uint256 _devDepositPercent) external
+    {
+        require(msg.sender == devAddress, "dev: wut?");
+        require (_vaultAddress != address(0) && _charityAddress != address(0) && _devAddress != address(0), "Cannot use zero address");
+        require (_vaultMintPercent <= 1000 && _charityMintPercent <= 100 && _devMintPercent <= 100, "Mint percent constraints");
+        require (_vaultDepositPercent <= 9500 && _charityDepositPercent <= 250 && _devDepositPercent <= 250, "Mint percent constraints");
+
+        devAddress = _vaultAddress;
+        charityAddress = _charityAddress;
+        devAddress = _devAddress;
+
+        vaultMintPercent = _vaultMintPercent;
+        charityMintPercent = _charityMintPercent;
+        devMintPercent = _devMintPercent;
+
+        vaultDepositPercent = _vaultDepositPercent;
+        charityDepositPercent = _charityDepositPercent;
+        devDepositPercent = _devDepositPercent;
+    }
+
+    function rune_proxy_setFeeInfo(address _vaultAddress, address _charityAddress, address _devAddress, uint256 _vaultFee, uint256 _charityFee, uint256 _devFee) external
+    {
+        require(msg.sender == devAddress, "dev: wut?");
+        rune.setFeeInfo(_vaultAddress, _charityAddress, _devAddress, _vaultFee, _charityFee, _devFee);
+    }
+
+    function rune_proxy_addExcluded(address _account) external {
+        require(msg.sender == devAddress, "dev: wut?");
+        rune.addExcluded(_account);
+    }
+
+    function rune_proxy_removeExcluded(address _account) external {
+        require(msg.sender == devAddress, "dev: wut?");
+        rune.removeExcluded(_account);
     }
 }
