@@ -981,21 +981,24 @@ pragma solidity 0.6.12;
 
 // RuneToken with Governance.
 contract RuneToken is BEP20('Rune', 'RUNE') {
-    uint256 private _VAULT_FEE = 0;
-    uint256 private _CHARITY_FEE = 0;
-    uint256 private _DEV_FEE = 0;
+    uint256 public vaultFee = 0;
+    uint256 public charityFee = 0;
+    uint256 public devFee = 0;
 
-    address private _VAULT_ADDRESS;
-    address private _CHARITY_ADDRESS;
-    address private _DEV_ADDRESS;
+    address public vaultAddress;
+    address public charityAddress;
+    address public devAddress;
 
-    mapping (address => bool) private _isExcluded;
-    address[] private _excluded;
+    mapping (address => bool) public isExcluded;
+    address[] public excluded;
+
+    bool mintable = true;
 
     /// @notice Creates `_amount` token to `_to`. Must only be called by the owner (MasterChef).
     function mint(address _to, uint256 _amount) public onlyOwner {
+        require(mintable == true, 'Minting has been forever disabled');
         _mint(_to, _amount);
-        _moveDelegates(address(0), _delegates[_to], _amount);
+        _moveDelegates(address(0), delegateList[_to], _amount);
     }
 
     // Copied and modified from YAM code:
@@ -1005,7 +1008,7 @@ contract RuneToken is BEP20('Rune', 'RUNE') {
     // https://github.com/compound-finance/compound-protocol/blob/master/contracts/Governance/Comp.sol
 
     /// @notice A record of each accounts delegate
-    mapping (address => address) internal _delegates;
+    mapping (address => address) internal delegateList;
 
     /// @notice A checkpoint for marking number of votes from a given block
     struct Checkpoint {
@@ -1043,7 +1046,7 @@ contract RuneToken is BEP20('Rune', 'RUNE') {
         view
         returns (address)
     {
-        return _delegates[delegator];
+        return delegateList[delegator];
     }
 
    /**
@@ -1168,9 +1171,9 @@ contract RuneToken is BEP20('Rune', 'RUNE') {
     function _delegate(address delegator, address delegatee)
         internal
     {
-        address currentDelegate = _delegates[delegator];
+        address currentDelegate = delegateList[delegator];
         uint256 delegatorBalance = balanceOf(delegator); // balance of underlying RUNEs (not scaled);
-        _delegates[delegator] = delegatee;
+        delegateList[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
 
@@ -1228,34 +1231,38 @@ contract RuneToken is BEP20('Rune', 'RUNE') {
         return chainId;
     }
 
-    function setFeeInfo(address vaultAddress, address charityAddress, address devAddress, uint256 vaultFee, uint256 charityFee, uint256 devFee) public onlyOwner()
+    function disableMintingForever() public onlyOwner() {
+        mintable = false;
+    }
+
+    function setFeeInfo(address _vaultAddress, address _charityAddress, address _devAddress, uint256 _vaultFee, uint256 _charityFee, uint256 _devFee) public onlyOwner()
     {
-        require (vaultAddress != address(0) && charityAddress != address(0) && devAddress != address(0), "RUNE::setFeeInfo: Cannot use zero address");
-        require (vaultFee <= 100 && charityFee <= 10 && devFee <= 10, "RUNE::_transfer: Fee constraints");
+        require (_vaultAddress != address(0) && _charityAddress != address(0) && _devAddress != address(0), "RUNE::setFeeInfo: Cannot use zero address");
+        require (_vaultFee <= 100 && _charityFee <= 10 && _devFee <= 10, "RUNE::_transfer: Fee constraints");
 
-        _VAULT_ADDRESS = vaultAddress;
-        _CHARITY_ADDRESS = charityAddress;
-        _DEV_ADDRESS = devAddress;
+        vaultAddress = _vaultAddress;
+        charityAddress = _charityAddress;
+        devAddress = _devAddress;
 
-        _VAULT_FEE = vaultFee;
-        _CHARITY_FEE = charityFee;
-        _DEV_FEE = devFee;
+        vaultFee = _vaultFee;
+        charityFee = _charityFee;
+        devFee = _devFee;
     }
 
     function addExcluded(address account) external onlyOwner() {
-        require(!_isExcluded[account], "RUNE::addExcluded: Account is already excluded");
+        require(!isExcluded[account], "RUNE::addExcluded: Account is already excluded");
 
-        _isExcluded[account] = true;
-        _excluded.push(account);
+        isExcluded[account] = true;
+        excluded.push(account);
     }
 
     function removeExcluded(address account) external onlyOwner() {
-        require(_isExcluded[account], "RUNE::removeExcluded: Account isn't excluded");
-        for (uint256 i = 0; i < _excluded.length; i++) {
-            if (_excluded[i] == account) {
-                _excluded[i] = _excluded[_excluded.length - 1];
-                _isExcluded[account] = false;
-                _excluded.pop();
+        require(isExcluded[account], "RUNE::removeExcluded: Account isn't excluded");
+        for (uint256 i = 0; i < excluded.length; i++) {
+            if (excluded[i] == account) {
+                excluded[i] = excluded[excluded.length - 1];
+                isExcluded[account] = false;
+                excluded.pop();
                 break;
             }
         }
@@ -1265,13 +1272,13 @@ contract RuneToken is BEP20('Rune', 'RUNE') {
         require(sender != address(0), "RUNE::_transfer: Transfer from the zero address");
         require(recipient != address(0), "RUNE::_transfer: Transfer to the zero address");
     
-        if (_isExcluded[sender] && !_isExcluded[recipient]) {
+        if (isExcluded[sender] && !isExcluded[recipient]) {
             _transferFromExcluded(sender, recipient, amount);
-        } else if (!_isExcluded[sender] && _isExcluded[recipient]) {
+        } else if (!isExcluded[sender] && isExcluded[recipient]) {
             _transferToExcluded(sender, recipient, amount);
-        } else if (!_isExcluded[sender] && !_isExcluded[recipient]) {
+        } else if (!isExcluded[sender] && !isExcluded[recipient]) {
             _transferStandard(sender, recipient, amount);
-        } else if (_isExcluded[sender] && _isExcluded[recipient]) {
+        } else if (isExcluded[sender] && isExcluded[recipient]) {
             _transferBothExcluded(sender, recipient, amount);
         } else {
             _transferStandard(sender, recipient, amount);
@@ -1279,22 +1286,17 @@ contract RuneToken is BEP20('Rune', 'RUNE') {
     }
 
     function _transferStandard(address sender, address recipient, uint256 amount) private {
-        uint256 vaultFee = amount.mul(_VAULT_FEE).div(100);
-        uint256 charityFee = amount.mul(_CHARITY_FEE).div(100);
-        uint256 devFee = amount.mul(_DEV_FEE).div(100);
-        uint256 transferAmount = amount.sub(vaultFee).sub(charityFee).sub(devFee);
+        uint256 _vaultFee = amount.mul(vaultFee).div(10000);
+        uint256 _charityFee = amount.mul(charityFee).div(10000);
+        uint256 _devFee = amount.mul(devFee).div(10000);
+        uint256 transferAmount = amount.sub(_vaultFee).sub(_charityFee).sub(_devFee);
 
         _balances[sender] = _balances[sender].sub(amount);
         _balances[recipient] = _balances[recipient].add(transferAmount);
 
-        if (vaultFee > 0)
-            _balances[_VAULT_ADDRESS] = _balances[_VAULT_ADDRESS].add(vaultFee);
-        
-        if (charityFee > 0)
-            _balances[_CHARITY_ADDRESS] = _balances[_CHARITY_ADDRESS].add(charityFee);
-        
-        if (devFee > 0)
-            _balances[_DEV_ADDRESS] = _balances[_DEV_ADDRESS].add(devFee);
+        _balances[vaultAddress] = _balances[vaultAddress].add(_vaultFee);
+        _balances[charityAddress] = _balances[charityAddress].add(_charityFee);
+        _balances[devAddress] = _balances[devAddress].add(_devFee);
 
         emit Transfer(sender, recipient, transferAmount);
     }
@@ -1382,14 +1384,14 @@ contract MasterChef is Ownable {
     address public vaultAddress;
 
     // Mint percent breakdown
-    uint256 private devMintPercent = 0;
-    uint256 private vaultMintPercent = 0;
-    uint256 private charityMintPercent = 0;
+    uint256 public devMintPercent = 0;
+    uint256 public vaultMintPercent = 0;
+    uint256 public charityMintPercent = 0;
 
     // Deposit fee breakdown
-    uint256 private devDepositPercent = 0;
-    uint256 private vaultDepositPercent = 0;
-    uint256 private charityDepositPercent = 0;
+    uint256 public devDepositPercent = 0;
+    uint256 public vaultDepositPercent = 0;
+    uint256 public charityDepositPercent = 0;
 
     // Info of each pool.
     PoolInfo[] public poolInfo;
@@ -1493,9 +1495,9 @@ contract MasterChef is Ownable {
         }
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
         uint256 runeReward = multiplier.mul(runePerBlock).mul(pool.allocPoint).div(totalAllocPoint);
-        rune.mint(devAddress, runeReward.div(10000).mul(devMintPercent));
-        rune.mint(vaultAddress, runeReward.div(10));
-        rune.mint(charityAddress, runeReward.div(10));
+        rune.mint(devAddress, runeReward.mul(devMintPercent).div(10000));
+        rune.mint(vaultAddress, runeReward.mul(vaultMintPercent).div(10000));
+        rune.mint(charityAddress, runeReward.mul(charityMintPercent).div(10000));
         rune.mint(address(this), runeReward);
         pool.accRunePerShare = pool.accRunePerShare.add(runeReward.mul(1e12).div(lpSupply));
         pool.lastRewardBlock = block.number;
@@ -1516,9 +1518,9 @@ contract MasterChef is Ownable {
             pool.lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
             if(pool.depositFeeBP > 0){
                 uint256 depositFee = _amount.mul(pool.depositFeeBP).div(10000);
-                pool.lpToken.safeTransfer(vaultAddress, depositFee.div(10000).mul(vaultDepositPercent));
-                pool.lpToken.safeTransfer(devAddress, depositFee.div(10000).mul(devDepositPercent));
-                pool.lpToken.safeTransfer(charityAddress, depositFee.div(10000).mul(charityDepositPercent));
+                pool.lpToken.safeTransfer(vaultAddress, depositFee.mul(vaultDepositPercent).div(10000));
+                pool.lpToken.safeTransfer(devAddress, depositFee.mul(devDepositPercent).div(10000));
+                pool.lpToken.safeTransfer(charityAddress, depositFee.mul(charityDepositPercent).div(10000));
                 user.amount = user.amount.add(_amount).sub(depositFee);
             }else{
                 user.amount = user.amount.add(_amount);
@@ -1580,7 +1582,7 @@ contract MasterChef is Ownable {
         require (_vaultMintPercent <= 1000 && _charityMintPercent <= 100 && _devMintPercent <= 100, "Mint percent constraints");
         require (_vaultDepositPercent <= 9500 && _charityDepositPercent <= 250 && _devDepositPercent <= 250, "Mint percent constraints");
 
-        devAddress = _vaultAddress;
+        vaultAddress = _vaultAddress;
         charityAddress = _charityAddress;
         devAddress = _devAddress;
 
@@ -1591,6 +1593,10 @@ contract MasterChef is Ownable {
         vaultDepositPercent = _vaultDepositPercent;
         charityDepositPercent = _charityDepositPercent;
         devDepositPercent = _devDepositPercent;
+    }
+
+    function reclaimTokenOwnership(address _address) external onlyOwner() {
+        rune.transferOwnership(_address);
     }
 
     function rune_proxy_setFeeInfo(address _vaultAddress, address _charityAddress, address _devAddress, uint256 _vaultFee, uint256 _charityFee, uint256 _devFee) external

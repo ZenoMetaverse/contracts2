@@ -58,14 +58,14 @@ contract MasterChef is Ownable {
     address public vaultAddress;
 
     // Mint percent breakdown
-    uint256 private devMintPercent = 0;
-    uint256 private vaultMintPercent = 0;
-    uint256 private charityMintPercent = 0;
+    uint256 public devMintPercent = 0;
+    uint256 public vaultMintPercent = 0;
+    uint256 public charityMintPercent = 0;
 
     // Deposit fee breakdown
-    uint256 private devDepositPercent = 0;
-    uint256 private vaultDepositPercent = 0;
-    uint256 private charityDepositPercent = 0;
+    uint256 public devDepositPercent = 0;
+    uint256 public vaultDepositPercent = 0;
+    uint256 public charityDepositPercent = 0;
 
     // Info of each pool.
     PoolInfo[] public poolInfo;
@@ -169,9 +169,9 @@ contract MasterChef is Ownable {
         }
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
         uint256 runeReward = multiplier.mul(runePerBlock).mul(pool.allocPoint).div(totalAllocPoint);
-        rune.mint(devAddress, runeReward.div(10000).mul(devMintPercent));
-        rune.mint(vaultAddress, runeReward.div(10));
-        rune.mint(charityAddress, runeReward.div(10));
+        rune.mint(devAddress, runeReward.mul(devMintPercent).div(10000));
+        rune.mint(vaultAddress, runeReward.mul(vaultMintPercent).div(10000));
+        rune.mint(charityAddress, runeReward.mul(charityMintPercent).div(10000));
         rune.mint(address(this), runeReward);
         pool.accRunePerShare = pool.accRunePerShare.add(runeReward.mul(1e12).div(lpSupply));
         pool.lastRewardBlock = block.number;
@@ -192,9 +192,9 @@ contract MasterChef is Ownable {
             pool.lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
             if(pool.depositFeeBP > 0){
                 uint256 depositFee = _amount.mul(pool.depositFeeBP).div(10000);
-                pool.lpToken.safeTransfer(vaultAddress, depositFee.div(10000).mul(vaultDepositPercent));
-                pool.lpToken.safeTransfer(devAddress, depositFee.div(10000).mul(devDepositPercent));
-                pool.lpToken.safeTransfer(charityAddress, depositFee.div(10000).mul(charityDepositPercent));
+                pool.lpToken.safeTransfer(vaultAddress, depositFee.mul(vaultDepositPercent).div(10000));
+                pool.lpToken.safeTransfer(devAddress, depositFee.mul(devDepositPercent).div(10000));
+                pool.lpToken.safeTransfer(charityAddress, depositFee.mul(charityDepositPercent).div(10000));
                 user.amount = user.amount.add(_amount).sub(depositFee);
             }else{
                 user.amount = user.amount.add(_amount);
@@ -256,7 +256,7 @@ contract MasterChef is Ownable {
         require (_vaultMintPercent <= 1000 && _charityMintPercent <= 100 && _devMintPercent <= 100, "Mint percent constraints");
         require (_vaultDepositPercent <= 9500 && _charityDepositPercent <= 250 && _devDepositPercent <= 250, "Mint percent constraints");
 
-        devAddress = _vaultAddress;
+        vaultAddress = _vaultAddress;
         charityAddress = _charityAddress;
         devAddress = _devAddress;
 
@@ -267,6 +267,10 @@ contract MasterChef is Ownable {
         vaultDepositPercent = _vaultDepositPercent;
         charityDepositPercent = _charityDepositPercent;
         devDepositPercent = _devDepositPercent;
+    }
+
+    function reclaimTokenOwnership(address _address) external onlyOwner() {
+        rune.transferOwnership(_address);
     }
 
     function rune_proxy_setFeeInfo(address _vaultAddress, address _charityAddress, address _devAddress, uint256 _vaultFee, uint256 _charityFee, uint256 _devFee) external

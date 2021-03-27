@@ -4,21 +4,24 @@ import "./lib/token/BEP20/BEP20.sol";
 
 // RuneToken with Governance.
 contract RuneToken is BEP20('Rune', 'RUNE') {
-    uint256 private _VAULT_FEE = 0;
-    uint256 private _CHARITY_FEE = 0;
-    uint256 private _DEV_FEE = 0;
+    uint256 public vaultFee = 0;
+    uint256 public charityFee = 0;
+    uint256 public devFee = 0;
 
-    address private _VAULT_ADDRESS;
-    address private _CHARITY_ADDRESS;
-    address private _DEV_ADDRESS;
+    address public vaultAddress;
+    address public charityAddress;
+    address public devAddress;
 
-    mapping (address => bool) private _isExcluded;
-    address[] private _excluded;
+    mapping (address => bool) public isExcluded;
+    address[] public excluded;
+
+    bool mintable = true;
 
     /// @notice Creates `_amount` token to `_to`. Must only be called by the owner (MasterChef).
     function mint(address _to, uint256 _amount) public onlyOwner {
+        require(mintable == true, 'Minting has been forever disabled');
         _mint(_to, _amount);
-        _moveDelegates(address(0), _delegates[_to], _amount);
+        _moveDelegates(address(0), delegateList[_to], _amount);
     }
 
     // Copied and modified from YAM code:
@@ -28,7 +31,7 @@ contract RuneToken is BEP20('Rune', 'RUNE') {
     // https://github.com/compound-finance/compound-protocol/blob/master/contracts/Governance/Comp.sol
 
     /// @notice A record of each accounts delegate
-    mapping (address => address) internal _delegates;
+    mapping (address => address) internal delegateList;
 
     /// @notice A checkpoint for marking number of votes from a given block
     struct Checkpoint {
@@ -66,7 +69,7 @@ contract RuneToken is BEP20('Rune', 'RUNE') {
         view
         returns (address)
     {
-        return _delegates[delegator];
+        return delegateList[delegator];
     }
 
    /**
@@ -191,9 +194,9 @@ contract RuneToken is BEP20('Rune', 'RUNE') {
     function _delegate(address delegator, address delegatee)
         internal
     {
-        address currentDelegate = _delegates[delegator];
+        address currentDelegate = delegateList[delegator];
         uint256 delegatorBalance = balanceOf(delegator); // balance of underlying RUNEs (not scaled);
-        _delegates[delegator] = delegatee;
+        delegateList[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
 
@@ -251,34 +254,38 @@ contract RuneToken is BEP20('Rune', 'RUNE') {
         return chainId;
     }
 
-    function setFeeInfo(address vaultAddress, address charityAddress, address devAddress, uint256 vaultFee, uint256 charityFee, uint256 devFee) public onlyOwner()
+    function disableMintingForever() public onlyOwner() {
+        mintable = false;
+    }
+
+    function setFeeInfo(address _vaultAddress, address _charityAddress, address _devAddress, uint256 _vaultFee, uint256 _charityFee, uint256 _devFee) public onlyOwner()
     {
-        require (vaultAddress != address(0) && charityAddress != address(0) && devAddress != address(0), "RUNE::setFeeInfo: Cannot use zero address");
-        require (vaultFee <= 100 && charityFee <= 10 && devFee <= 10, "RUNE::_transfer: Fee constraints");
+        require (_vaultAddress != address(0) && _charityAddress != address(0) && _devAddress != address(0), "RUNE::setFeeInfo: Cannot use zero address");
+        require (_vaultFee <= 100 && _charityFee <= 10 && _devFee <= 10, "RUNE::_transfer: Fee constraints");
 
-        _VAULT_ADDRESS = vaultAddress;
-        _CHARITY_ADDRESS = charityAddress;
-        _DEV_ADDRESS = devAddress;
+        vaultAddress = _vaultAddress;
+        charityAddress = _charityAddress;
+        devAddress = _devAddress;
 
-        _VAULT_FEE = vaultFee;
-        _CHARITY_FEE = charityFee;
-        _DEV_FEE = devFee;
+        vaultFee = _vaultFee;
+        charityFee = _charityFee;
+        devFee = _devFee;
     }
 
     function addExcluded(address account) external onlyOwner() {
-        require(!_isExcluded[account], "RUNE::addExcluded: Account is already excluded");
+        require(!isExcluded[account], "RUNE::addExcluded: Account is already excluded");
 
-        _isExcluded[account] = true;
-        _excluded.push(account);
+        isExcluded[account] = true;
+        excluded.push(account);
     }
 
     function removeExcluded(address account) external onlyOwner() {
-        require(_isExcluded[account], "RUNE::removeExcluded: Account isn't excluded");
-        for (uint256 i = 0; i < _excluded.length; i++) {
-            if (_excluded[i] == account) {
-                _excluded[i] = _excluded[_excluded.length - 1];
-                _isExcluded[account] = false;
-                _excluded.pop();
+        require(isExcluded[account], "RUNE::removeExcluded: Account isn't excluded");
+        for (uint256 i = 0; i < excluded.length; i++) {
+            if (excluded[i] == account) {
+                excluded[i] = excluded[excluded.length - 1];
+                isExcluded[account] = false;
+                excluded.pop();
                 break;
             }
         }
@@ -288,13 +295,13 @@ contract RuneToken is BEP20('Rune', 'RUNE') {
         require(sender != address(0), "RUNE::_transfer: Transfer from the zero address");
         require(recipient != address(0), "RUNE::_transfer: Transfer to the zero address");
     
-        if (_isExcluded[sender] && !_isExcluded[recipient]) {
+        if (isExcluded[sender] && !isExcluded[recipient]) {
             _transferFromExcluded(sender, recipient, amount);
-        } else if (!_isExcluded[sender] && _isExcluded[recipient]) {
+        } else if (!isExcluded[sender] && isExcluded[recipient]) {
             _transferToExcluded(sender, recipient, amount);
-        } else if (!_isExcluded[sender] && !_isExcluded[recipient]) {
+        } else if (!isExcluded[sender] && !isExcluded[recipient]) {
             _transferStandard(sender, recipient, amount);
-        } else if (_isExcluded[sender] && _isExcluded[recipient]) {
+        } else if (isExcluded[sender] && isExcluded[recipient]) {
             _transferBothExcluded(sender, recipient, amount);
         } else {
             _transferStandard(sender, recipient, amount);
@@ -302,22 +309,17 @@ contract RuneToken is BEP20('Rune', 'RUNE') {
     }
 
     function _transferStandard(address sender, address recipient, uint256 amount) private {
-        uint256 vaultFee = amount.mul(_VAULT_FEE).div(100);
-        uint256 charityFee = amount.mul(_CHARITY_FEE).div(100);
-        uint256 devFee = amount.mul(_DEV_FEE).div(100);
-        uint256 transferAmount = amount.sub(vaultFee).sub(charityFee).sub(devFee);
+        uint256 _vaultFee = amount.mul(vaultFee).div(10000);
+        uint256 _charityFee = amount.mul(charityFee).div(10000);
+        uint256 _devFee = amount.mul(devFee).div(10000);
+        uint256 transferAmount = amount.sub(_vaultFee).sub(_charityFee).sub(_devFee);
 
         _balances[sender] = _balances[sender].sub(amount);
         _balances[recipient] = _balances[recipient].add(transferAmount);
 
-        if (vaultFee > 0)
-            _balances[_VAULT_ADDRESS] = _balances[_VAULT_ADDRESS].add(vaultFee);
-        
-        if (charityFee > 0)
-            _balances[_CHARITY_ADDRESS] = _balances[_CHARITY_ADDRESS].add(charityFee);
-        
-        if (devFee > 0)
-            _balances[_DEV_ADDRESS] = _balances[_DEV_ADDRESS].add(devFee);
+        _balances[vaultAddress] = _balances[vaultAddress].add(_vaultFee);
+        _balances[charityAddress] = _balances[charityAddress].add(_charityFee);
+        _balances[devAddress] = _balances[devAddress].add(_devFee);
 
         emit Transfer(sender, recipient, transferAmount);
     }
