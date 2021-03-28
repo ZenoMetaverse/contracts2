@@ -36,7 +36,7 @@ contract BEP20 is Context, IBEP20, Ownable {
 
     mapping(address => uint256) internal _balances;
 
-    mapping(address => mapping(address => uint256)) private _allowances;
+    mapping(address => mapping(address => uint256)) internal _allowances;
 
     uint256 private _totalSupply;
 
@@ -109,7 +109,7 @@ contract BEP20 is Context, IBEP20, Ownable {
      * - `recipient` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
      */
-    function transfer(address recipient, uint256 amount) public override returns (bool) {
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
         _transfer(_msgSender(), recipient, amount);
         return true;
     }
@@ -149,7 +149,7 @@ contract BEP20 is Context, IBEP20, Ownable {
         address sender,
         address recipient,
         uint256 amount
-    ) public override returns (bool) {
+    ) public virtual override returns (bool) {
         _transfer(sender, recipient, amount);
         _approve(
             sender,

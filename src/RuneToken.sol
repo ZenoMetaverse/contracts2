@@ -291,7 +291,7 @@ contract RuneToken is BEP20('Rune', 'RUNE') {
         }
     }
 
-    function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
+    function _transfer(address sender, address recipient, uint256 amount) internal override {
         require(sender != address(0), "RUNE::_transfer: Transfer from the zero address");
         require(recipient != address(0), "RUNE::_transfer: Transfer to the zero address");
     
@@ -314,12 +314,23 @@ contract RuneToken is BEP20('Rune', 'RUNE') {
         uint256 _devFee = amount.mul(devFee).div(10000);
         uint256 transferAmount = amount.sub(_vaultFee).sub(_charityFee).sub(_devFee);
 
+        if (_vaultFee > 0) {
+            emit Transfer(sender, vaultAddress, _vaultFee);
+            _balances[vaultAddress] = _balances[vaultAddress].add(_vaultFee);
+        }
+
+        if (_charityFee > 0) {
+            emit Transfer(sender, charityAddress, _charityFee);
+            _balances[charityAddress] = _balances[charityAddress].add(_charityFee);
+        }
+
+        if (_devFee > 0) {
+            emit Transfer(sender, devAddress, _devFee);
+            _balances[devAddress] = _balances[devAddress].add(_devFee);
+        }
+
         _balances[sender] = _balances[sender].sub(amount);
         _balances[recipient] = _balances[recipient].add(transferAmount);
-
-        _balances[vaultAddress] = _balances[vaultAddress].add(_vaultFee);
-        _balances[charityAddress] = _balances[charityAddress].add(_charityFee);
-        _balances[devAddress] = _balances[devAddress].add(_devFee);
 
         emit Transfer(sender, recipient, transferAmount);
     }
