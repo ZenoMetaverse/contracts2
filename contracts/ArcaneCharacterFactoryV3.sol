@@ -2455,10 +2455,10 @@ contract ArcaneCharacterFactoryV2 is Ownable {
     string private ipfsHash;
 
     // number of total series (i.e. different visuals)
-    uint8 private constant numberCharacterIds = 10;
+    uint8 private constant numberCharacterIds = 8;
 
     // number of previous series (i.e. different visuals)
-    uint8 private constant previousNumberCharacterIds = 5;
+    uint8 private constant previousNumberCharacterIds = 1;
 
     // Map the token number to URI
     mapping(uint8 => string) private characterIdURIs;
@@ -2547,35 +2547,21 @@ contract ArcaneCharacterFactoryV2 is Ownable {
      * Only the owner can set it.
      */
     function setCharacterJson(
+        string calldata _characterId1Json,
+        string calldata _characterId2Json,
+        string calldata _characterId3Json,
+        string calldata _characterId4Json,
         string calldata _characterId5Json,
         string calldata _characterId6Json,
-        string calldata _characterId7Json,
-        string calldata _characterId8Json,
-        string calldata _characterId9Json
+        string calldata _characterId7Json
     ) external onlyOwner {
+        characterIdURIs[1] = string(abi.encodePacked(ipfsHash, _characterId1Json));
+        characterIdURIs[2] = string(abi.encodePacked(ipfsHash, _characterId2Json));
+        characterIdURIs[3] = string(abi.encodePacked(ipfsHash, _characterId3Json));
+        characterIdURIs[4] = string(abi.encodePacked(ipfsHash, _characterId4Json));
         characterIdURIs[5] = string(abi.encodePacked(ipfsHash, _characterId5Json));
         characterIdURIs[6] = string(abi.encodePacked(ipfsHash, _characterId6Json));
         characterIdURIs[7] = string(abi.encodePacked(ipfsHash, _characterId7Json));
-        characterIdURIs[8] = string(abi.encodePacked(ipfsHash, _characterId8Json));
-        characterIdURIs[9] = string(abi.encodePacked(ipfsHash, _characterId9Json));
-    }
-
-    /**
-     * @dev Set up names for characters 5-9
-     * Only the owner can set it.
-     */
-    function setCharacterNames(
-        string calldata _characterId5,
-        string calldata _characterId6,
-        string calldata _characterId7,
-        string calldata _characterId8,
-        string calldata _characterId9
-    ) external onlyOwner {
-        arcaneCharacters.setCharacterName(5, _characterId5);
-        arcaneCharacters.setCharacterName(6, _characterId6);
-        arcaneCharacters.setCharacterName(7, _characterId7);
-        arcaneCharacters.setCharacterName(8, _characterId8);
-        arcaneCharacters.setCharacterName(9, _characterId9);
     }
 
     /**
@@ -2884,6 +2870,8 @@ contract ArcaneCharacterMintingStation is AccessControl {
 
     /**
      * @dev Mint NFTs from the ArcaneCharacters contract.
+     * Users can specify what characterId they want to mint. Users can claim once.
+     * There is a limit on how many are distributed. It requires RUNE balance to be > 0.
      */
     function mintCollectible(
         address _tokenReceiver,
@@ -2942,10 +2930,10 @@ contract ArcaneCharacterFactoryV3 is Ownable {
     string private ipfsHash;
 
     // number of total series (i.e. different visuals)
-    uint8 private constant numberCharacterIds = 7;
+    uint8 private constant numberCharacterIds = 8;
 
     // number of previous series (i.e. different visuals)
-    uint8 private constant previousNumberCharacterIds = 0;
+    uint8 private constant previousNumberCharacterIds = 1;
 
     // Map the token number to URI
     mapping(uint8 => string) private characterIdURIs;
@@ -2974,7 +2962,15 @@ contract ArcaneCharacterFactoryV3 is Ownable {
     }
 
     /**
-     * @dev Mint NFTs from the ArcaneCharacterMintingStation contract.
+     * @dev Allow to change the IPFS hash
+     * Only the owner can set it.
+     */
+    function updateIpfsHash(string memory _ipfsHash) external onlyOwner {
+        ipfsHash = _ipfsHash;
+    }
+
+    /**
+     * @dev Mint NFTs from the CharacterMintingStation contract.
      * Users can specify what characterId they want to mint. Users can claim once.
      */
     function mintNFT(uint8 _characterId) external {
