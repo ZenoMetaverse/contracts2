@@ -2356,7 +2356,7 @@ contract ArcaneCharacters is ERC721, Ownable {
     // Map the characterName for a tokenId
     mapping(uint8 => string) private characterNames;
 
-    constructor(string memory _baseURI) public ERC721("Arcane Characters", "PB") {
+    constructor(string memory _baseURI) public ERC721("Arcane Characters", "AC") {
         _setBaseURI(_baseURI);
     }
 
@@ -2942,10 +2942,10 @@ contract ArcaneCharacterFactoryV3 is Ownable {
     string private ipfsHash;
 
     // number of total series (i.e. different visuals)
-    uint8 private constant numberCharacterIds = 10;
+    uint8 private constant numberCharacterIds = 7;
 
     // number of previous series (i.e. different visuals)
-    uint8 private constant previousNumberCharacterIds = 5;
+    uint8 private constant previousNumberCharacterIds = 0;
 
     // Map the token number to URI
     mapping(uint8 => string) private characterIdURIs;
@@ -3020,22 +3020,26 @@ contract ArcaneCharacterFactoryV3 is Ownable {
     }
 
     /**
-     * @dev Set up json extensions for characters 5-9
+     * @dev Set up json extensions for characters
      * Assign tokenURI to look for each characterId in the mint function
      * Only the owner can set it.
      */
     function setCharacterJson(
+        string calldata _characterId1Json,
+        string calldata _characterId2Json,
+        string calldata _characterId3Json,
+        string calldata _characterId4Json,
         string calldata _characterId5Json,
         string calldata _characterId6Json,
-        string calldata _characterId7Json,
-        string calldata _characterId8Json,
-        string calldata _characterId9Json
+        string calldata _characterId7Json
     ) external onlyOwner {
+        characterIdURIs[1] = string(abi.encodePacked(ipfsHash, _characterId1Json));
+        characterIdURIs[2] = string(abi.encodePacked(ipfsHash, _characterId2Json));
+        characterIdURIs[3] = string(abi.encodePacked(ipfsHash, _characterId3Json));
+        characterIdURIs[4] = string(abi.encodePacked(ipfsHash, _characterId4Json));
         characterIdURIs[5] = string(abi.encodePacked(ipfsHash, _characterId5Json));
         characterIdURIs[6] = string(abi.encodePacked(ipfsHash, _characterId6Json));
         characterIdURIs[7] = string(abi.encodePacked(ipfsHash, _characterId7Json));
-        characterIdURIs[8] = string(abi.encodePacked(ipfsHash, _characterId8Json));
-        characterIdURIs[9] = string(abi.encodePacked(ipfsHash, _characterId9Json));
     }
 
     /**

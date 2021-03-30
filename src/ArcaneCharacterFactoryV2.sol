@@ -2356,7 +2356,7 @@ contract ArcaneCharacters is ERC721, Ownable {
     // Map the characterName for a tokenId
     mapping(uint8 => string) private characterNames;
 
-    constructor(string memory _baseURI) public ERC721("Arcane Characters", "PB") {
+    constructor(string memory _baseURI) public ERC721("Arcane Characters", "AC") {
         _setBaseURI(_baseURI);
     }
 

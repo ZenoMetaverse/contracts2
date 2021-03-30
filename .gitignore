@@ -3,6 +3,8 @@
 
 contracts/lib
 
+notes
+
 node_modules
 
 #Buidler files
@@ -10,3 +12,4 @@ cache
 artifacts
 coverage
 coverage.json
+.DS_Store
