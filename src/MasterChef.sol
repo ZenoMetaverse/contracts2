@@ -56,6 +56,8 @@ contract MasterChef is Ownable {
     uint256 public constant BONUS_MULTIPLIER = 1;
     // Vault address
     address public vaultAddress;
+    // Void address
+    address public voidAddress;
 
     // Mint percent breakdown
     uint256 public devMintPercent = 0;
@@ -85,6 +87,7 @@ contract MasterChef is Ownable {
         address _devAddress,
         address _vaultAddress,
         address _charityAddress,
+        address _voidAddress,
         uint256 _runePerBlock,
         uint256 _startBlock
     ) public {
@@ -92,6 +95,7 @@ contract MasterChef is Ownable {
         devAddress = _devAddress;
         vaultAddress = _vaultAddress;
         charityAddress = _charityAddress;
+        voidAddress = _voidAddress;
         runePerBlock = _runePerBlock;
         startBlock = _startBlock;
     }
@@ -163,7 +167,7 @@ contract MasterChef is Ownable {
             return;
         }
         uint256 lpSupply = pool.lpToken.balanceOf(address(this));
-        if (lpSupply == 0 || pool.allocPoint == 0) {
+        if (lpSupply == 0 || pool.allocPoint == 0 || runePerBlock == 0) {
             pool.lastRewardBlock = block.number;
             return;
         }
@@ -253,7 +257,7 @@ contract MasterChef is Ownable {
     {
         require(msg.sender == devAddress, "dev: wut?");
         require (_vaultAddress != address(0) && _charityAddress != address(0) && _devAddress != address(0), "Cannot use zero address");
-        require (_vaultMintPercent <= 1000 && _charityMintPercent <= 100 && _devMintPercent <= 100, "Mint percent constraints");
+        require (_vaultMintPercent <= 9500 && _charityMintPercent <= 250 && _devMintPercent <= 250, "Mint percent constraints");
         require (_vaultDepositPercent <= 9500 && _charityDepositPercent <= 250 && _devDepositPercent <= 250, "Mint percent constraints");
 
         vaultAddress = _vaultAddress;
@@ -267,10 +271,6 @@ contract MasterChef is Ownable {
         vaultDepositPercent = _vaultDepositPercent;
         charityDepositPercent = _charityDepositPercent;
         devDepositPercent = _devDepositPercent;
-    }
-
-    function reclaimTokenOwnership(address _address) external onlyOwner() {
-        rune.transferOwnership(_address);
     }
 
     function rune_proxy_setFeeInfo(address _vaultAddress, address _charityAddress, address _devAddress, uint256 _vaultFee, uint256 _charityFee, uint256 _devFee) external
@@ -287,5 +287,13 @@ contract MasterChef is Ownable {
     function rune_proxy_removeExcluded(address _account) external {
         require(msg.sender == devAddress, "dev: wut?");
         rune.removeExcluded(_account);
+    }
+
+    function throwRuneInTheVoid() external {
+        require(msg.sender == devAddress, "dev: wut?");
+        massUpdatePools();
+        runePerBlock = 0;
+        rune.disableMintingForever();
+        rune.transferOwnership(voidAddress);
     }
 }
