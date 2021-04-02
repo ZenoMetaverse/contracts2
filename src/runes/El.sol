@@ -1,6 +1,6 @@
 pragma solidity 0.6.12;
 
-import "./lib/token/BEP20/BEP20.sol";
+import "../lib/token/BEP20/BEP20.sol";
 
 // El Rune
 contract El is BEP20('El', 'EL') {
@@ -20,10 +20,18 @@ contract El is BEP20('El', 'EL') {
     mapping (address => bool) public isBot;
     address[] public bot;
 
-    bool mintable = true;
+    bool public mintable = true;
+
+    function _mint(address account, uint256 amount) internal override {
+        require(mintable == true, 'Minting has been forever disabled');
+        require(account != address(0), 'BEP20: mint to the zero address');
+
+        _totalSupply = _totalSupply.add(amount);
+        _balances[account] = _balances[account].add(amount);
+        emit Transfer(address(0), account, amount);
+    }
 
     function mint(address _to, uint256 _amount) public onlyOwner {
-        require(mintable == true, 'Minting has been forever disabled');
         _mint(_to, _amount);
     }
 
@@ -117,7 +125,7 @@ contract El is BEP20('El', 'EL') {
 
     function _transferBot(address sender, address recipient, uint256 amount) private {
         uint256 _botFee = amount.mul(botFee).div(10000);
-        uint256 transferAmount = amount.sub(_botFee)
+        uint256 transferAmount = amount.sub(_botFee);
 
         if (_botFee > 0) {
             emit Transfer(sender, botAddress, _botFee);

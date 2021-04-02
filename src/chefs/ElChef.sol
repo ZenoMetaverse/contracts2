@@ -83,7 +83,7 @@ contract ElChef is Ownable {
     event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
 
     constructor(
-        RuneToken _rune,
+        ElRune _rune,
         address _devAddress,
         address _vaultAddress,
         address _charityAddress,

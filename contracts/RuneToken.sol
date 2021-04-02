@@ -595,7 +595,7 @@ contract BEP20 is Context, IBEP20, Ownable {
 
     mapping(address => mapping(address => uint256)) internal _allowances;
 
-    uint256 private _totalSupply;
+    uint256 internal _totalSupply;
 
     string private _name;
     string private _symbol;
@@ -805,7 +805,7 @@ contract BEP20 is Context, IBEP20, Ownable {
      *
      * - `to` cannot be the zero address.
      */
-    function _mint(address account, uint256 amount) internal {
+    function _mint(address account, uint256 amount) internal virtual {
         require(account != address(0), 'BEP20: mint to the zero address');
 
         _totalSupply = _totalSupply.add(amount);
