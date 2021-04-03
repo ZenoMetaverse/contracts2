@@ -8,7 +8,7 @@
     "build": "yarn flatten && truffle compile --network bscTestnet",
     "test": "npx builder test",
     "coverage": "npx builder coverage",
-    "flatten": "truffle-flattener src/RuneToken.sol > contracts/RuneToken.sol && truffle-flattener src/MasterChef.sol > contracts/MasterChef.sol && truffle-flattener src/Timelock.sol > contracts/Timelock.sol && truffle-flattener src/runes/El.sol > contracts/runes/El.sol && truffle-flattener src/Void.sol > contracts/Void.sol"
+    "flatten": "truffle-flattener src/RuneToken.sol > contracts/RuneToken.sol && truffle-flattener src/MasterChef.sol > contracts/MasterChef.sol && truffle-flattener src/Timelock.sol > contracts/Timelock.sol && truffle-flattener src/runes/El.sol > contracts/runes/El.sol && truffle-flattener src/chefs/ElChef.sol > contracts/chefs/ElChef.sol && truffle-flattener src/Void.sol > contracts/Void.sol && truffle-flattener src/voids/ElVoid.sol > contracts/voids/ElVoid.sol"
   },
   "dependencies": {
     "@arcanefinance/swap-lib": "^0.0.4",

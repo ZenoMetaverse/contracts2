@@ -5,7 +5,7 @@ import "../lib/token/BEP20/IBEP20.sol";
 import "../lib/token/BEP20/SafeBEP20.sol";
 import "../lib/access/Ownable.sol";
 
-import "../ElRune.sol";
+import "../runes/El.sol";
 
 // MasterChef is the master of Rune. He can make Rune and he is a fair guy.
 //
@@ -273,10 +273,10 @@ contract ElChef is Ownable {
         devDepositPercent = _devDepositPercent;
     }
 
-    function rune_proxy_setFeeInfo(address _vaultAddress, address _charityAddress, address _devAddress, uint256 _vaultFee, uint256 _charityFee, uint256 _devFee) external
+    function rune_proxy_setFeeInfo(address _vaultAddress, address _charityAddress, address _devAddress, address _botAddress, uint256 _vaultFee, uint256 _charityFee, uint256 _devFee, uint256 _botFee) external
     {
         require(msg.sender == devAddress, "dev: wut?");
-        rune.setFeeInfo(_vaultAddress, _charityAddress, _devAddress, _vaultFee, _charityFee, _devFee);
+        rune.setFeeInfo(_vaultAddress, _charityAddress, _devAddress, _botAddress, _vaultFee, _charityFee, _devFee, _botFee);
     }
 
     function rune_proxy_addExcluded(address _account) external {
